@@ -2577,3 +2577,3944 @@ Value:
    included.
 
 .. |image0| image:: media/image1.png
+   **Old Trackers** Some digipeaters have the ability to convert raw
+   NMEA strings from existing trackers to compressed data format for
+   further forwarding.
+
+   These digipeaters will compress the data if the tracker Destination
+   Address is
+
+   GPS. (**Note**: This is the 3-letter address GPS, not GPS*).
+
+   Trackers desiring for their packets to not be modified by the APRS
+   network will use any other valid generic APRS Destination Address.
+
+**Compressed Report**
+
+**Formats**
+
+   Compressed data is contained in the AX.25 Information field, in these
+   formats:
+
+   Bytes:
+
+   Bytes:
+
+MIC-E DATA FORMAT
+=================
+
+   **Mic-E Data Format** In Mic-E data format, the station’s position,
+   course, speed and display symbol, together with an APRS digipeater
+   path and Mic-E Message Code, are packed into the AX.25 Destination
+   Address and Information fields.
+
+   The Information field can also optionally contain either Mic-E
+   telemetry data or Mic-E status. The Mic-E Status can contain the
+   station’s Maidenhead locator and altitude.
+
+   Mic-E packets can be very short. At the minimum, with no callsigns in
+   the Digipeater Addresses field and no optional telemetry data or
+   Mic-E status text, a complete Mic-E packet is just 25 bytes long
+   (excluding FCS and flags).
+
+   Mic-E data format is not only used in the Microphone Encoder unit; it
+   is also used in the PIC Encoder and in the Kenwood TH-D7 and TM-D700
+   radios.
+
+   **Mic-E Data Payload** The Mic-E data format allows a large amount of
+   data to be carried in a very short packet. The data is split between
+   the Destination Address field and the Information field of a standard
+   AX.25 UI-frame.
+
+   **Destination Address Field** — The 7-byte Destination Address field
+   contains the following encoded information:
+
+-  The 6 latitude digits.
+
+-  A 3-bit Mic-E message identifier, specifying one of 7 Standard Mic-E
+      Message Codes or one of 7 Custom Message Codes or an Emergency
+      Message Code.
+
+-  The North/South and West/East Indicators.
+
+-  The Longitude Offset Indicator.
+
+-  The generic APRS digipeater path code.
+
+..
+
+   Although the destination address appears to be quite unconventional,
+   it is still a valid AX.25 address, consisting only of printable 7-bit
+   ASCII values (shifted one bit left) — see the *Amateur Packet-Radio
+   Link-Layer Protocol* specification for full details of the format of
+   standard AX.25 addresses.
+
+   **Information Field** — This field contains the following data:
+
+-  The encoded longitude.
+
+-  The encoded course and speed.
+
+-  The display Symbol Code and Symbol Table Identifier.
+
+-  An optional field, containing either Mic-E telemetry data or a Mic-E
+      status text string. The status string can contain plain text,
+      Maidenhead
+
+..
+
+   locator or the station’s altitude.
+
+   **Mic-E Destination Address Field**
+
+   The standard AX.25 Destination Address field consists of 7 bytes,
+   containing 6 callsign characters and the SSID (plus a number of other
+   bits that are not of interest here). When used to carry Mic-E data,
+   however, this field has a quite different format:
+
+   Bytes:
+
+   The Destination Address field contains:
+
+-  Six encoded latitude digits specifying degrees (digits 1 and 2),
+      minutes (digits 3 and 4) and hundredths of minutes (digits 5 and
+      6).
+
+-  3-bit Mic-E message identifier (message bits A, B and C).
+
+-  North/South latitude indicator.
+
+-  Longitude offset (adds 0 degrees or 100 degrees to the longitude
+      computation in the Information field).
+
+-  West/East longitude indicator.
+
+-  Generic APRS digipeater path (encoded in the SSID).
+
+..
+
+   **Destination Address Field**
+
+   **Encoding**
+
+   The table on the next page shows the encoding of the first 6 bytes of
+   the Destination Address field, for all combinations of latitude
+   digit, the 3-bit Mic-E message identifier (A/B/C), the
+   latitude/longitude indicators and the longitude offset.
+
+   The encoding supports position ambiguity.
+
+   The ASCII characters shown in the table are left-shifted one bit
+   position prior to transmission.
+
+   **Mic-E Destination Address Field Encoding (Bytes 1–6)**
+
+   **Note**: the ASCII characters **A**–**K** are not used in address
+   bytes 4–6.
+
+   For example, for a station at a latitude of 33 degrees 25.64 minutes
+   north, in the western hemisphere, with longitude offset +0 degrees,
+   and transmitting standard message identifier bits 1/0/0, the encoding
+   of the first 6 bytes of the Destination Address field is as follows:
+
+   Destination Address Byte:
+
+   **Mic-E Messages** The first three bytes of the Destination Address
+   field contain three message identifier bits: A, B and C. These bits
+   allow one of 15 message types to be specified:
+
+-  7 Standard messages
+
+-  7 Custom messages
+
+-  1 Emergency message
+
+..
+
+   For the 7 Standard messages, one or more of the message identifier
+   bits is a
+
+   **1**, shown in the Mic-E Destination Address Field Encoding table as
+   1 (Std).
+
+   For the 7 Custom messages, one or more of the message identifier bits
+   is a **1**, shown in the Mic-E Destination Address Field Encoding
+   table as 1 (Custom).
+
+   For the Emergency message, all three message identifier bits are
+   **0**.
+
+   The following table shows the encoding of Mic-E message types, for
+   all combinations of the A/B/C message identifier bits:
+
+   **Mic-E Message Types**
+
++----------+----------+----------+-----------------+-----------------+
+|    **A** |    **B** |    **C** |    **Standard   |    **Custom     |
+|          |          |          |    Mic-E        |    Mic-E        |
+|          |          |          |    Message      |    Message      |
+|          |          |          |    Type**       |    Type**       |
++==========+==========+==========+=================+=================+
+|    1     |    1     |    1     |    M0: Off Duty |    C0: Custom-0 |
++----------+----------+----------+-----------------+-----------------+
+|    1     |    1     |    0     |    M1: En Route |    C1: Custom-1 |
++----------+----------+----------+-----------------+-----------------+
+|    1     |    0     |    1     |    M2: In       |    C2: Custom-2 |
+|          |          |          |    Service      |                 |
++----------+----------+----------+-----------------+-----------------+
+|    1     |    0     |    0     |    M3:          |    C3: Custom-3 |
+|          |          |          |    Returning    |                 |
++----------+----------+----------+-----------------+-----------------+
+|    0     |    1     |    1     |    M4:          |    C4: Custom-4 |
+|          |          |          |    Committed    |                 |
++----------+----------+----------+-----------------+-----------------+
+|    0     |    1     |    0     |    M5: Special  |    C5: Custom-5 |
++----------+----------+----------+-----------------+-----------------+
+|    0     |    0     |    1     |    M6: Priority |    C6: Custom-6 |
++----------+----------+----------+-----------------+-----------------+
+|    0     |    0     |    0     |    Emergency    |                 |
++----------+----------+----------+-----------------+-----------------+
+
+..
+
+   The Standard messages and the Emergency message have the same meaning
+   for all APRS stations. The Custom messages may be assigned any
+   arbitrary meaning.
+
+   **Note**: Support for Custom messages is optional. Original Mic-E
+   units do not support Custom messages.
+
+   **Note**: If the A/B/C message identifier bits contain a mixture of
+   Standard **1**\ s and Custom **1**\ s, the message type is “unknown”.
+
+   Some examples of message type encoding:
+
++----------------+----------------+----------------+----------------+
+|    **First 3   |    **Message   |    **Message   |    **Message** |
+|    Destination |    Identifier  |    Type**      |                |
+|    Address     |    Bits        |                |                |
+|    Bytes**     |    A/B/C**     |                |                |
++================+================+================+================+
+| **S32**        |    Standard 1  |    Standard    |    M3:         |
+|                |    / 0 / 0     |                |    Returning   |
++----------------+----------------+----------------+----------------+
+| **F2D**        |    Custom 1 /  |    Custom      |    C2:         |
+|                |    0 / Custom  |                |    Custom-2    |
+|                |    1           |                |                |
++----------------+----------------+----------------+----------------+
+| **234**        |    0 / 0 / 0   |    Emergency   |    Emergency   |
++----------------+----------------+----------------+----------------+
+
+..
+
+   **Destination Address SSID Field**
+
+   The SSID in the Destination Address field of a Mic-E packet is coded
+   to specify either a conventional digipeater VIA path (contained in
+   the Digipeater Addresses field of the AX.25 frame), or one of 15
+   generic APRS digipeater paths. See Chapter 4: APRS Data in the AX.25
+   Destination and Source Address Fields.
+
+**Mic-E Information**
+
+**Field**
+
+   The Information field is used to complete the Position Report that
+   was begun in the Destination Address field. The encoding used is
+   different from the destination address since the content is not
+   constrained to be printable, shifted 7-bit ASCII, as it is in the
+   address. However, full 8-bit binary is not used — all values are
+   offset by 28 and further operations (described below) are performed
+   on some of the values to make almost all of the data printable ASCII.
+
+   The format of the Information field is as follows:
+
+   Bytes:
+
+**Information Field**
+
+**Data**
+
+   The first 9 bytes of the Information field contain the APRS Data Type
+   Identifier, longitude, speed, course and symbol data.
+
+   The APRS Data Type Identifier is one of:
+
+   ‘Current GPS data
+
+   (but not used in Kenwood TM-D700 radios) .
+
+   **'** Old GPS data
+
+   (or *Current* GPS data in Kenwood TM-D700 radios).
+
+   0x1c Current GPS data (Rev. 0 beta units only). 0x1d Old GPS data
+   (Rev. 0 beta units only).
+
+   **IMPORTANT NOTE**: As explained in detail below, some of the bytes
+   in the Information field are non-printing ASCII characters. In
+   certain circumstances (such as incorrect TNC setup or inappropriate
+   software), some of these non-printing characters may be dropped,
+   making the Information field appear shorter than it really is. This
+   will lead to incorrect decoding. (In particular, if the Information
+   field appears to be less than 9 bytes long, the packet must be
+   ignored).
+
+**Longitude Degrees**
+
+**Encoding**
+
+   The **d+28** byte in the Information field contains the encoded value
+   of the longitude degrees, in the range 0–179 degrees.
+
+   (Note that for longitude values in the range 0–9 degrees, the
+   longitude offset is +100 degrees):
+
+   **Mic-E Longitude Degrees Encoding**
+
+   Note from the table that the encoding is split into four separate
+   pieces:
+
+-  0–9 degrees: **d+28** is in the range 118–127 decimal, corresponding
+      to the ASCII characters **v** to **DEL**.
+
+..
+
+   **Important Note**: The longitude offset is set to **+100 degrees**
+   when the longitude is in the range 0–9 degrees.
+
+-  10–99 degrees: **d+28** is in the range 38–127 decimal (corresponding
+      to the ASCII characters **&** to **DEL**), and the longitude
+      offset is +0 degrees.
+
+   -  100–109 degrees: **d+28** is in the range 108–117 decimal,
+         corresponding to the ASCII characters **l** (lower-case letter
+         “L”) to **DEL**, and the longitude offset is +100 degrees.
+
+   -  110–179 degrees: **d+28** is in the range 38–127 decimal
+         (corresponding to the ASCII characters **&** to **DEL**), and
+         the longitude offset is +100 degrees.
+
+..
+
+   Thus the overall range of valid **d+28** values is 38–127 decimal
+   (corresponding to ASCII characters **&** to **DEL**).
+
+   All of these characters (except DEL, for 9 and 99 degrees) are
+   printable ASCII characters.
+
+   To decode the longitude degrees value:
+
+1. subtract 28 from the **d+28** value to obtain **d**.
+
+2. if the longitude offset is +100 degrees, add 100 to **d**.
+
+3. subtract 80 if 180 ˜ **d** ˜ 189
+
+..
+
+   (i.e. the longitude is in the range 100–109 degrees).
+
+4. or, subtract 190 if 190 ˜ **d** ˜ 199.
+
+..
+
+   (i.e. the longitude is in the range 0–9 degrees).
+
+**Longitude Minutes**
+
+**Encoding**
+
+   The **m+28** byte in the Information field contains the encoded value
+   of the longitude minutes, in the range 0–59 minutes:
+
+   **Mic-E Longitude Minutes Encoding**
+
+   Note from the table that the encoding is split into two separate
+   pieces:
+
+-  0–9 minutes: **m+28** is in the range 88–97 decimal, corresponding to
+      the ASCII characters **X** to **a**.
+
+-  10–59 minutes: **m+28** is in the range 38–87 decimal (corresponding
+      to the ASCII characters **&** to **W**).
+
+..
+
+   Thus the overall range of valid **m+28** values is 38–97 decimal
+   (corresponding
+
+   to ASCII characters **&** to **a**). All of these characters are
+   printable ASCII characters.
+
+   To decode the longitude minutes value:
+
+1. subtract 28 from the **m+28** value to obtain **m**.
+
+2. subtract 60 if **m** ™ 60.
+
+..
+
+   (i.e. the longitude minutes is in the range 0–9).
+
+   **Longitude Hundredths of Minutes Encoding**
+
+   The **h+28** byte in the Information field contains the encoded value
+   of the longitude hundredths of minutes, in the range 0–99 minutes.
+   This byte takes a value in the range 28 decimal (corresponding to 0
+   hundredths of a minute) through 127 decimal (corresponding to 99
+   hundredths of a minute).
+
+   To decode the longitude hundredths of minutes value, subtract 28 from
+   the
+
+   **h+28** value.
+
+   All of the possible values are printable ASCII characters (except 0–3
+   and 99 hundredths of a minute).
+
+**Speed and Course**
+
+**Encoding**
+
+   The speed and course of a station are encoded in 3 bytes, designated
+   **SP+28**, **DC+28** and **SE+28**.
+
+   The speed is in the range 0–799 knots, and the course is in the range
+   0–360 degrees (0 degrees represents an unknown or indefinite course,
+   and 360 degrees represents due north).
+
+   The encoded speed and course are spread over the three bytes, as
+   follows:
+
++----------------------+----------------------+----------------------+
+|    **Speed**         |    **Course**        |                      |
++======================+======================+======================+
+|    Encoded Speed     |    Encoded Speed     |    Encoded Course    |
+|    (hundreds/tens of |    (units) and       |    (tens/units)      |
+|    knots)            |    Encoded Course    |                      |
+|                      |    (hundreds of      |                      |
+|                      |    degrees)          |                      |
++----------------------+----------------------+----------------------+
+|    **SP+28**         |    **DC+28**         |    **SE+28**         |
++----------------------+----------------------+----------------------+
+
+..
+
+   **SP+28 Encoding** The **SP+28** byte contains the encoded speed, in
+   hundreds/tens of knots, according to this table:
+
+   **SP+28 Speed Encoding (hundreds/tens of knots)**
+
+   **Note**: The ASCII characters shown in white on a black background
+   are non- printing characters.
+
+   **Note**: For speeds in the range 0–199 knots, there are two encoding
+   schemes in existence. Hence there are two columns for the ASCII
+   character, and two columns for the corresponding **SP+28** byte
+   values.
+
+   For example, for a speed of 73 knots (i.e. in the range 70–79), the
+   **SP+28** byte may contain either **s** or **#**, depending on the
+   encoding method used. Both are equally valid.
+
+   The decoding algorithm described later handles either of these
+   encoding schemes.
+
+   **DC+28 Encoding** The **DC+28** byte contains the encoded units of
+   speed, plus the encoded course in hundreds of degrees:
+
+   **DC+28 Speed / Course Encoding (units of knots/hundreds of
+   degrees)**
+
+   **Note**: The ASCII characters shown in white on a black background
+   are non- printing characters.
+
+   **Note**: There are two encoding schemes in existence for the
+   **DC+28** byte. Hence there are two columns for the ASCII character,
+   and two columns for the corresponding **DC+28** byte values.
+
+   For example, for a speed of 73 knots (i.e. units=3) and a bearing of
+   294 degrees (i.e. in the range 200–299), the **DC+28** byte may
+   contain either **@** or
+
+   **<**, depending on the encoding method used. Both are equally valid.
+
+   The decoding algorithm described later handles either of these
+   encoding schemes.
+
+   **SE+28 Encoding** The **SE+28** byte contains the encoded tens and
+   units of degrees of the course:
+
+   **SE+28 Course Encoding (tens/units of degrees)**
+
+   **Example of Mic-E Speed and Course**
+
+   **Encoding**
+
+   For a speed of 86 knots and a course of 194 degrees, the encoding is:
+
+   **SP+28**: The speed is in the range 80–89 knots. From the **SP+28**
+   encoding table, the **SP+28** byte may be either **t** or **$**.
+
+   **DC+28**: The units of speed are 6, and the course is in the range
+   100–199 degrees. From the **DC+28** encoding table, the **DC+28**
+   byte may be either **]** or **Y**.
+
+   **SE+28**: The course in tens and units of degrees is 94. From the
+   **SE+28**
+
+   encoding table, the **SE+28** byte will be **z**.
+
+   **Decoding the Speed and Course**
+
+   To decode the speed and course:
+
+   **SP+28**: To obtain the speed in tens of knots, subtract 28 from the
+   **SP+28**
+
+   value and multiply by 10.
+
+   **DC+28**: Subtract 28 from the **DC+28** value and divide the result
+   by 10. The quotient is the units of speed. The remainder is the
+   course in hundreds of degrees.
+
+   **SE+28**: To obtain the tens and units of degrees, subtract 28 from
+   the **SE+28**
+
+   value.
+
+   Finally, make these speed and course adjustments:
+
+-  If the computed speed is ™ 800 knots, subtract 800.
+
+-  If the computed course is ™ 400 degrees, subtract 400.
+
+..
+
+   **Example of Decoding the Information Field**
+
+**Data**
+
+   If the first 9 bytes of the Information field contain ‘\ **(_f n
+   "Oj/**, and the destination address specifies that the station is in
+   the western hemisphere with a longitude offset of +100 degrees, then
+   the data is decoded as follows:
+
+-  ‘ is the APRS Data Type Identifier for a Mic-E packet containing
+      current GPS data.
+
+-  **(** is the **d+28** byte. The **(** character has the value 40
+      decimal. Subtracting 28 gives 12. The longitude offset (in the
+      destination address) is +100 degrees, so the longitude is 100 + 12
+      = 112 degrees.
+
+-  **\_** is the **m+28** byte. The **\_** character has the value 95
+      decimal. Subtracting 28 gives 67. This is ™ 60, so subtracting 60
+      gives a value of 7 minutes longitude.
+
+-  **f** is the **h+28** byte. The **f** character has the value 102
+      decimal. Subtracting 28 gives 74 hundredths of a minute.
+
+..
+
+   Thus the longitude is 112 degrees 7.74 minutes west. The speed and
+   course are calculated as follows:
+
+-  **n** is the **SP+28** byte. The **n** character has the value 110
+      decimal. After subtracting 28, the result is 82. As this is ™ 80,
+      a further 80 is subtracted, leaving a result of 2 tens of knots.
+
+-  **"** is the **DC+28** byte. The **"** character has the value 34
+      decimal. Subtracting 28 gives 6. Dividing this by 10 gives a
+      quotient of 0 (units of speed). Adding the first part of the
+      speed, multiplied by 10 (i.e. 20) to the quotient (0) gives a
+      final computed speed of 20 knots.
+
+..
+
+   The remainder from the division is 6. Subtracting 4 gives the course
+   in hundreds of degrees; i.e. 2.
+
+-  **O** (upper-case letter “O”) is the **SE+28** byte. The **O**
+      character has the value 79 decimal. Subtracting 28 gives 51.
+      Adding this to the remainder calculated above, multiplied by 100
+      (i.e. 200), gives the final value of 251 degrees for the course.
+
+..
+
+   The last two characters (**j/**) represent the jeep symbol from the
+   Primary Symbol Table.
+
+   **Mic-E Position Ambiguity**
+
+   As mentioned in Chapter 6 (Time and Position Formats), a station may
+   reduce the precision of its position by introducing position
+   ambiguity. This is also possible in Mic-E data format.
+
+   The position ambiguity is specified for the latitude (in the
+   destination address). The same degree of ambiguity will then also
+   apply to the longitude.
+
+   For example, if the destination address is **T4SQZZ**, the last two
+   digits of the
+
+   latitude are ambiguous (represented by **ZZ**). Then, if the
+   longitude data in the Information field is **(_f** , as in the above
+   example, the last two digits of the computed longitude will be
+   ignored — that is, the longitude will be 112 degrees 7 minutes.
+
+**Mic-E Telemetry**
+
+**Data**
+
+Bytes:
+
+   The Information field may optionally contain either Mic-E telemetry
+   data values or Mic-E status text.
+
+   If the byte following the Symbol Table Identifier is one of the
+   Telemetry Flag characters (**‘**,\ **'** or 0x1d), then telemetry
+   data follows:
+
++------------+------------+---------+---------+---------+---------+
+|            |            |         |         |         |         |
+| **Optional |            |         |         |         |         |
+|    Mic-E   |            |         |         |         |         |
+|            |            |         |         |         |         |
+|  Telemetry |            |         |         |         |         |
+|    Data**  |            |         |         |         |         |
++============+============+=========+=========+=========+=========+
+|    *       |    *       |         |         |         |         |
+| *Telemetry | *Telemetry |         |         |         |         |
+|    Flag**  |    Data    |         |         |         |         |
+|            |            |         |         |         |         |
+|            | Channels** |         |         |         |         |
++------------+------------+---------+---------+---------+---------+
+|    F       | Ch 1       |    Ch 2 |    Ch 3 |    Ch 4 |    Ch 5 |
++------------+------------+---------+---------+---------+---------+
+|    1       | 1/2        |    1/2  |    1/2  |    1/2  |    1/2  |
++------------+------------+---------+---------+---------+---------+
+
+..
+
+   The Telemetry Flag F is one of:
+
+   **‘** 2 printable hex telemetry values follow (channels 1 and 3).
+
+   **'** 5 printable hex telemetry values follow.
+
+   0x1d 5 binary telemetry values follow (Rev. 0 beta units only).
+
+   If F is **‘** or **'**, each channel requires 2 bytes, containing a
+   2-digit printable hexadecimal representation of a value ranging from
+   0–255. For example, 254 is represented as **FE**.
+
+   If F is 0x1d, each channel requires one byte, containing an 8-bit
+   binary value.
+
+   For example, if the telemetry data is **'7200007100**, the **'**
+   indicates that 5 bytes of telemetry follow, coded in hexadecimal:
+
+   0x72 = 114 decimal 0x00 = 0 decimal 0x00 = 0 decimal 0x71 = 113
+   decimal 0x00 = 0 decimal
+
+   **Mic-E Status Text** As an alternative to telemetry data, the packet
+   may include Mic-E status text. The status text may be any length that
+   fits in the rest of the Information field.
+
+   The Mic-E status text must not start with **‘**,\ **'** or 0x1d,
+   otherwise it will be confused with telemetry data.
+
+   It is possible to include a standard APRS-formatted position in the
+   Mic-E status text field. A suitable position will cause the APRS
+   display software to override any position data the Mic-E has encoded.
+   This is useful if using a Mic-E without a GPS receiver.
+
+   **Note**: The Kenwood radios automatically insert a special type code
+   at the front of the status text string (i.e. in the 10th character of
+   the Information field):
+
+   Kenwood TH-D7: **>**
+
+   Kenwood TM-D700: **]**
+
+   These characters should not be confused with the APRS Data Type
+   Identifier that appears at the start of reports.
+
+   It is envisaged that other Mic-E-compatible devices will be allocated
+   their own type codes in future.
+
+   **Note**: When Kenwood radios receive the status, they can only
+   display a small number of text characters:
+
+   Kenwood TH-D7: 20 characters Kenwood TM-D700: 28 characters
+
+   **Note**: The Kenwood TM-D700 radio uses the ' (apostrophe) instead
+   of the ‘ (grave) APRS Data Type Identifier to represent current GPS
+   data. A suggested way of detecting this situation is to examine the
+   first and 10th characters of the Information field; if they are ' and
+   **]** respectively, then the packet is almost certainly from a
+   TM-D700.
+
+   **Maidenhead Locator in the Mic-E Status Text Field**
+
+   The Mic-E status text field can contain a Maidenhead locator.
+
+   If the locator is followed by a plain text comment, the first
+   character of the text *must* be a space. For example:
+
+   IO91SX/G\ **␣**\ Hello␣world (from a Mic-E or PIC-E)
+
+   >IO91SX/G\ **␣**\ Hello␣world (from a Kenwood TH-D7)
+
+   ]IO91SX/G\ **␣**\ Hello␣world (from a Kenwood TM-D700)
+
+   (**/G** is the grid locator symbol).
+
+   **Altitude in the Mic-E Status Text**
+
+   **Field**
+
+   The Mic-E status text field can contain the station’s altitude. The
+   altitude is expressed in the form xxx\ **}**, where xxx is in meters
+   relative to 10km below mean sea level (the deepest ocean), to base
+   91.
+
+   For example, to compute the xxx characters for an altitude of 200
+   feet: 200 feet = 61 meters = 10061 meters relative to the datum
+
+   10061 / 91\ :sup:`2` = **1**, remainder 1780
+
+   1780 / 91 = **19**, remainder **51**
+
+   Adding 33 to each of the highlighted values gives 34, 52 and 84 for
+   the ASCII codes of xxx.
+
+   Thus the 4-character altitude string is **"4T}**
+
+   Some examples:
+
+   "4T}
+
+   >"4T}
+
+   ]"4T}
+
+   **Mic-E Data in Non-APRS**
+
+   **Networks**
+
+   Some parts of the Mic-E AX.25 Information field may contain binary
+   data (i.e. non-printable ASCII characters). If such a packet is
+   constrained to the APRS network, this should not cause any
+   difficulties.
+
+   If, however, the packet is to be forwarded via a network that does
+   not reliably preserve binary data (e.g. the Internet), then it is
+   necessary to convert the data to a format that will preserve it.
+
+   Further, if the packet subsequently re-emerges back onto the APRS
+   network, it will then be necessary to re-convert the data back to its
+   original format.
+
+OBJECT AND ITEM REPORTS
+=======================
+
+   **Objects and Items** Any APRS station can manually report the
+   position of an APRS entity (e.g. another station or a weather
+   phenomenon). This is intended for situations where the entity is not
+   capable of reporting its own position.
+
+   APRS provides two types of report to support this:
+
+-  Object Reports
+
+-  Item Reports
+
+..
+
+   Object Reports specify an Object’s position, can have an optional
+   timestamp, and can include course/speed information or other Extended
+   Data. Object Reports are intended primarily for plotting the
+   positions of moving objects (e.g. spacecraft, storms, marathon
+   runners without trackers).
+
+   Item Reports specify an Item’s position, but cannot have a timestamp.
+   While Item reports may also include course/speed or other Extended
+   Data, they are really intended for inanimate things that are
+   occasionally posted on a map (e.g. marathon checkpoints or first-aid
+   posts). Otherwise they are handled in the same way as Object Reports.
+
+   Objects are distinguished from each other by having different Object
+   names. Similarly, Items are distinguished from each other by having
+   different Item names.
+
+   Implementation Recommendation: When an APRS Object/Item is displayed
+   on the screen, the callsign of the station sending the report should
+   be associated with the Object/Item.
+
+   **Replacing an Object / Item**
+
+   A fundamental precept of APRS is that any station may take over the
+   reporting responsibility for an APRS Object or Item, by simply
+   transmitting a new report with the same Object/Item name.
+
+   The replacement report may specify the existing location or a new
+   location.
+
+   The original station will cease transmitting an Object/Item Report
+   when it sees an incoming report with the same name from another
+   station.
+
+   **Killing an Object / Item**
+
+   To kill an Object/Item, a station transmits a new Object/Item Report,
+   with a “kill” character following the Object/Item name.
+
+   Implementation Recommendation: When an Object/Item is killed it
+   should be removed from display on the screen. However, the data
+   associated with the Object/Item should be retained internally in case
+   it is needed later.
+
+**Object Report**
+
+**Format**
+
+   An Object Report has a *fixed* 9-character Object name, which may
+   consist of any printable ASCII characters.
+
+   Object names are case-sensitive.
+
+   The ; is the APRS Data Type Identifier for an Object Report, and a
+   **\*** or **\_**
+
+   separates the Object name from the rest of the report:
+
+   **\*** indicates a live Object.
+
+   **\_** indicates a killed Object.
+
+   The position may be in lat/long or compressed lat/long format, and
+   the report may also contain Extended Data.
+
+   An Object always has a timestamp.
+
+   The Comment field may contain any appropriate APRS data (see the
+   *Comment Field* section in Chapter 5: APRS Data in the AX.25
+   Information Field).
+
+   Bytes:
+
+   Bytes:
+
+**Item Report**
+
+**Format**
+
+   An Item Report has a *variable-length* Item name, 3–9 characters
+   long. The name may consist of any printable ASCII characters *except*
+   **!** or **\_**.
+
+   Item names are case-sensitive.
+
+   The **)** is the APRS Data Type Identifier for an Item Report, and a
+   **!** or **\_**
+
+   separates the Item name from the rest of the report:
+
+   **!** indicates a live Item.
+
+   **\_** is the Item “kill” character.
+
+   The position may be in lat/long or compressed lat/long format. There
+   is no provision for a timestamp. The report may also contain Extended
+   Data.
+
+   The Comment field may contain any appropriate APRS data (see the
+   *Comment Field* section in Chapter 5: APRS Data in the AX.25
+   Information Field).
+
+   Bytes:
+
+   Bytes:
+
+   **Area Objects** Using the **\\l** symbol (i.e. the lower-case letter
+   “L” symbol from the Alternate Symbol Table) it is possible to define
+   circle, line, ellipse, triangle and box objects in all colors, either
+   open or filled in, any size from 60 feet to 100 miles.
+
+   These Objects are useful for real-time events such as for a
+   search-and-rescue, or adding a special road or route for a special
+   event.
+
+   The Object format is specified as a 7-character APRS Data Extension
+
+   Tyy/Cxx immediately following the **l** Symbol Code. For example:
+
+   ;OBJECT␣␣␣*ddmm.hhN\ **\\**\ dddmm.hhW **l** Tyy/Cxx
+
+   where:
+
+   T is the type of object shape.
+
+   /Cis the color of the object.
+
+   yyis the square root of the latitude offset in 1/100ths of a degree.
+
+   xxis the square root of the longitude offset in 1/100ths of a degree.
+   The object type and color codes are as follows:
+
+   The latitude/longitude position is the upper left corner of the
+   object, and the offsets are relative to this position — the yy offset
+   is *down* from this position and the xx offset is to the *right* of
+   this position. (An exception is the special case of a Type 6 line
+   which is drawn down and to the *left*).
+
+   Here are some examples of Object Position Reports. The latitude and
+   longitude offsets are each one degree (i.e. 100/100ths of a degree),
+   so yy = xx = –100 = 10.
+
+   ;SEARCH␣␣␣*092345z4903.50N\ **\\**\ 07201.75W **l 710/310**
+
+   A high intensity cyan filled ellipse, yy=10, xx=10
+
+   ;SEARCH␣␣␣*092345z4903.50N\ **\\**\ 07201.75W **l 8101310**
+
+   A low intensity violet filled triangle, yy=10, xx=10
+
+   Further, with the line option (Type 1 and Type 6) it is possible to
+   specify a “corridor” either side of the central line. The width of
+   the corridor (in miles) either side of the line is specified in the
+   comment text, enclosed by **{}**.
+
+   For example:
+
+   ;FLIGHTPTH*4903.50N\ **\\**\ 07201.75W **l 610/310{100}**
+
+   A high intensity cyan line, with a 100-mile corridor either side
+
+   **Note**: The color fill option should be used with care, since a
+   color-filled object will obscure information displayed underneath it.
+
+   **Signpost Objects/Items**
+
+   Signpost Objects/Items (with the symbol **\\m**) display as a yellow
+   box with a 1–3-character overlay on them. The overlay is specified by
+   enclosing the 1–3 characters in braces in the comment field. Thus a
+   signpost with {55} would appear as a sign with **55** on it.
+
+   For example:
+
+   )I91␣3N!4903.50N\ **\\**\ 07201.75W\ **m{55}**
+
+   This was originally designed for posting the speed of traffic past
+   speed measuring devices, but can be used for any purpose.
+
+   Implementation Recommendation: Signposts should not display any
+   callsign or name, and to avoid clutter should only be displayed at
+   close range.
+
+**Obsolete Object**
+
+**Format**
+
+   Some stations transmit Object reports without the **;** APRS Data
+   Type Identifier. This format is obsolete. Some software may still
+   decode such data as an Object, but it should now be interpreted as a
+   Status Report.
+
+WEATHER REPORTS
+===============
+
+**Weather Report**
+
+**Types**
+
+   APRS is an ideal tool for reporting weather conditions via packet.
+   APRS supports serial data transmissions from the Peet Brothers,
+   Ultimeter and Davis home weather stations. It is even possible to
+   mount an Ultimeter remotely with only a TNC and radio to report and
+   plot conditions. APRS is also ideally suited for the Skywarn weather
+   observer initiative.
+
+   APRS supports three types of Weather Report:
+
+-  Raw Weather Report
+
+-  Positionless Weather Report
+
+-  Complete Weather Report
+
+..
+
+   **Data Type Identifiers**
+
+   The following APRS Data Type Identifiers are used in Weather Reports
+   containing raw data:
+
+   **!** Ultimeter 2000
+
+   **#** Peet Bros U-II
+
+   **$** Ultimeter 2000
+
+   **\*** Peet Bros U-II
+
+   **\_** Positionless weather data
+
+   In addition, where the raw data has been post-processed (for example,
+   by the insertion of station location information), the four position
+   Data Type Identifiers **!**, **=**, **/** and **@** may be used
+   instead. In this case, the Weather Report is identified with the
+   weather symbol **/\_** or **\\\_** in the APRS Data.
+
+**Raw Weather**
+
+**Reports**
+
+   Raw weather data from a stand-alone weather station is contained in
+   the Information Field of an APRS AX.25 frame:
+
+   Bytes:
+
+   **Positionless Weather Reports**
+
+   Generic raw weather data from a stand-alone weather station is
+   contained in the Information Field of an APRS AX.25 frame:
+
+   Bytes:
+
+   **APRS Software**
+
+**Type**
+
+   A Weather Report may contain a single-character code S for the type
+   of APRS software that is running at the weather station:
+
+   **d** = APRSdos
+
+   **M** = MacAPRS
+
+   **P** = pocketAPRS
+
+   **S** = APRS+SA
+
+   **W** = WinAPRS
+
+   **X** = X-APRS (Linux)
+
+**Weather Unit**
+
+**Type**
+
+   A Weather Report may contain a 2–4 character code uuuu for the type
+   of weather station unit. The following codes have been allocated:
+
+   **Dvs** = Davis
+
+   **HKT** = Heathkit **PIC** = PIC device **RSW** = Radio Shack
+
+   **U-II** = Original Ultimeter U-II (auto mode) **U2R** = Original
+   Ultimeter U-II (remote mode) **U2k** = Ultimeter 500/2000
+
+   **U2kr** = Remote Ultimeter logger
+
+   **U5** = Ultimeter 500
+
+   **Upkm** = Remote Ultimeter packet mode
+
+   Users may specify any other 2–4 character code for devices not in
+   this list.
+
+   **Positionless Weather Data**
+
+   The format of weather data within a Positionless Weather Report
+   differs according to the type of weather station unit, but
+   generically consists of some or all of the following elements:
+
+   Bytes:
+
+   where: **c** = wind direction (in degrees).
+
+   **s** = sustained one-minute wind speed (in mph).
+
+   **g** = gust (peak wind speed in mph in the last 5 minutes).
+
+   **t** = temperature (in degrees Fahrenheit). Temperatures below zero
+   are expressed as -01 to -99.
+
+   **r** = rainfall (in hundredths of an inch) in the last hour.
+
+   **p** = rainfall (in hundredths of an inch) in the last 24 hours.
+
+   **P** = rainfall (in hundredths of an inch) since midnight.
+
+   **h** = humidity (in %. 00 = 100%).
+
+   **b** = barometric pressure (in tenths of millibars/tenths of
+   hPascal).
+
+   Other parameters that are available on some weather station units
+   include:
+
+   **L** = luminosity (in watts per square meter) 999 and below.
+
+   **l** (lower-case letter “L”) = luminosity (in watts per square
+   meter) 1000 and above.
+
+   (L is inserted in place of one of the rain values).
+
+   **s** = snowfall (in inches) in the last 24 hours.
+
+   **#** = raw rain counter
+
+   **Note**: The weather report must include at least the MDHM
+   date/timestamp, wind direction, wind speed, gust and temperature, but
+   the remaining parameters may be in a different order (or may not even
+   exist).
+
+   **Note**: Where an item of weather data is unknown or irrelevant, its
+   value may be expressed as a series of dots or spaces. For example, if
+   there is no wind speed/direction/gust sensor, the wind values could
+   be expressed as:
+
+   **c...s...g...** or **c␣␣␣s␣␣␣g␣␣␣**
+
+   For example, Jim’s rain gauge may produce a report like this:
+
+   \_10090556c...s...g...t...P012Jim
+
+   (The date/timestamp, wind direction/speed/gust and temperature
+   parameters must be included, even though they are not meaningful).
+
+   **Location of a Raw and Positionless Weather Stations**
+
+   APRS cannot display weather data on a map until it knows the location
+   of the sending station. In the case of a station transmitting Raw or
+   Positionless Weather Reports, the station has to occasionally send an
+   additional packet containing its position (using any of the legal
+   lat/long and compressed lat/long position formats described earlier).
+
+   **Symbols with Raw and Positionless Weather Stations**
+
+   Because Raw and Positionless Weather Reports do not contain a display
+   symbol in the AX.25 Information field, it is possible to specify the
+   symbol in a generic APRS destination address (e.g. GPSHW or GPSE63)
+   instead.
+
+   Alternatively, if the weather station is on a balloon, the SSID –11
+   may be used in the source address (e.g. N0QBF-11).
+
+   See Chapter 20: APRS Symbols for more detail on the usage of symbols.
+
+   **Complete Weather Reports with Timestamp and**
+
+**Position**
+
+   An APRS Complete Weather Report can contain a timestamp and location
+   information, using any of the legal lat/long and compressed lat/long
+   position formats described earlier. An APRS Object may also have
+   weather information associated with it.
+
+   Examples of report formats are shown below. Note that the Symbol Code
+   in every case is the **\_** (underscore). Also, the 7-byte Wind
+   Direction and Wind Speed Data Extension replace the **c**\ ccc and
+   **s**\ sss fields of a Positionless Weather Report.
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   **Storm Data** APRS reports can contain data relating to tropical
+   storms, hurricanes and tropical depressions. The format of the data
+   is as follows:
+
+   Bytes:
+
+   where: ST = **TS** (Tropical Storm)
+
+   **HC** (Hurricane)
+
+   **TD** (Tropical Depression).
+
+   www = sustained wind speed (in knots).
+
+   GGG = gust (peak wind speed in knots).
+
+   pppp = central pressure (in millibars/hPascal)
+
+   RRR = radius of hurricane winds (in nautical miles). rrr = radius of
+   tropical storm winds (in nautical miles). ggg = radius of “whole
+   gale” (i.e. 50 knot) winds (in
+
+   nautical miles). Optional.
+
+   Storm data will usually be included in an Object Report, but may also
+   be included in a Position Report or an Item Report.
+
+   The display symbol will be either:
+
+   **\\@** Hurricane/Tropical Storm (current position)
+
+   **/@** Hurricane (predicted future position)
+
+   For example, the progress of Hurricane Brenda could be expressed in
+   Object Reports like these:
+
+   ;BRENDA␣␣␣*092345z4903.50N\ **\\**\ 07202.75W\ **@**\ 088/036/HC/150^200/0980>090&030%040
+
+   ;BRENDA␣␣␣*100045z4905.50N\ **/**\ 07201.75W\ **@**\ 101/047/HC/104^123/0980>065&020%040
+
+   **National Weather Service Bulletins**
+
+   APRS supports the dissemination of National Weather Service
+   bulletins. See Chapter 14: Messages, Bulletins and Announcements.
+
+TELEMETRY DATA
+==============
+
+**Telemetry Report**
+
+**Format**
+
+   The AX.25 Information field can contain telemetry data. The APRS Data
+   Type Identifier is **T**.
+
+   The report Sequence Number is a 3-character value — typically a
+   3-digit number, or the three letters **MIC**. In the case of **MIC**,
+   there may or may not be a comma preceding the first analog data
+   value.
+
+   There are five 8-bit unsigned analog data values (expressed as
+   3-digit decimal numbers in the range 000–255), followed by a single
+   8-bit digital data value (expressed as 8 bytes, each containing **1**
+   or **0**).
+
+   The Kantronics KPC-3+ TNC and APRS Micro Interface Module (MIM) use
+   this format.
+
+   Bytes:
+
+**On-Air Definition of**
+
+   **Telemetry Parameters**
+
+   In principle, received telemetry data may be interpreted in any
+   appropriate way. In practice, however, an APRS user can define the
+   telemetry parameters (such as quadratic coefficients for the analog
+   values, or the meaning of the binary data) at any time, and then send
+   these definitions as APRS messages. Other stations receiving these
+   messages will then know how to interpret the data.
+
+   This is achieved by sending four messages:
+
+-  A Parameter Name message.
+
+-  A Unit/Label message.
+
+-  An Equation Coefficients message.
+
+-  A Bit Sense/Project Name message.
+
+..
+
+   The messages addressee is the callsign of the station transmitting
+   the telemetry data. For example, if N0QBF launches a balloon with the
+   callsign N0QBF-11, then the four messages are addressed to N0QBF-11.
+
+   See Chapter 14: Messages, Bulletins and Announcements for full
+   details of message formats.
+
+**Parameter Name**
+
+**Message**
+
+   The Parameter Name message contains the names (N) associated with the
+   five analog channels and the 8 digital channels. Its format is as
+   follows:
+
+   Bytes:
+
+   **Note**: The field widths are not all the same (this is a legacy
+   arising from earlier limitations in display screen width). Note also
+   that the byte counts *include* the comma separators where shown.
+
+   The list can terminate after any field.
+
+   **Unit/Label Message** The Unit/Label message specifies the units (U)
+   for the analog values, and the labels (L) associated with the digital
+   channels:
+
+   Bytes:
+
+   **Note**: Again, the field widths are not all the same, and the byte
+   counts
+
+   *include* the comma separators where shown. The list can terminate
+   after any field.
+
+   **Equation Coefficients Message**
+
+   The Equation Coefficients message contains three coefficients (a, b
+   and c) for each of the five analog channels.
+
+   Bytes:
+
+   To obtain the final value of an analog channel, these coefficients
+   are substituted into the equation:
+
+   a x v\ :sup:`2` + b x v + c
+
+   where v is the raw received analog value.
+
+   For example, analog channel A1 in the above beacon examples relates
+   to the battery voltage, expressed in hundredths of volts, and a = 0,
+   b = 5.2, c = 0. If the raw received value v is 199, then the voltage
+   is calculated as:
+
+   voltage = 0 x 199\ :sup:`2` + 5.2 x 199 + 0
+
+   = 1034.8 hundredths of a volt
+
+   = 10.348 volts
+
+   **Bit Sense/ Project Name**
+
+   **Message**
+
+   The Bit Sense/Project Name message contains two types of information:
+
+-  An 8-bit pattern of ones and zeros, specifying the sense of each
+      digital channel that matches the corresponding label.
+
+-  The name of the project associated with the telemetry station.
+
+..
+
+   Bytes:
+
+   Thus in the above message examples, if digital channel B1 is 1, this
+   indicates the camera has clicked. If channel B2 is 0, the parachute
+   has opened, and so on.
+
+MESSAGES, BULLETINS AND ANNOUNCEMENTS
+=====================================
+
+   APRS messages, bulletins and announcements are packets containing
+   free format text strings, and are intended to convey human-readable
+   information. A message is intended for reception by a single
+   specified recipient, and an acknowledgement is usually expected.
+   Bulletins and announcements are intended for reception by multiple
+   recipients, and are not acknowledged.
+
+   **Messages** An APRS message is a text string with a specified
+   addressee. The addressee is a fixed 9-character field (padded with
+   spaces if necessary) following the **:** Data Type Identifier. The
+   addressee field is followed by another **:**, then the text of the
+   message.
+
+   The message text may be up to 67 characters long, and may contain any
+   printable ASCII characters except **\|**, **~** or **{**.
+
+   A message may also have an optional message identifier, which is
+   appended to the message text. The message identifier consists of the
+   character **{** followed by a message number (up to 5 alphanumeric
+   characters, no spaces) to identify the message.
+
+   Messages *without* a message identifier are not to be acknowledged.
+
+   Messages *with* a message identifier are intended to be acknowledged
+   by the addressee. The sending station will repeatedly send the
+   message until it receives an acknowledgement, or it is canceled, or
+   it times out.
+
+   Bytes:
+
+   **Message Acknowledgement**
+
+Bytes:
+
+   A message acknowledgement is similar to a message, except that the
+   message text field contains just the letters **ack**, and this is
+   followed by the Message Number being acknowledged.
+
+   **Message Rejection** If a station is unable to accept a message, it
+   can send a **rej** message instead of an **ack** message:
+
+   Bytes:
+
+   **Multiple Acknowledgements**
+
+   If a station receives a particular message more than once, it will
+   respond with an acknowledgement for each instance of the message.
+
+   If a station receives a message over a long path, it may respond with
+   a reasonable number of multiple copies of the acknowledgement, to
+   improve the chances of the originating station receiving at least one
+   of the copies.
+
+   In either of these two situations, multiple message acknowledgements
+   should be separated by at least 30 seconds (this is because some
+   network components such as digipeaters will suppress duplicated
+   messages within a 30-second period).
+
+   **Message Groups** An APRS receiving station can specify special
+   Message Groups, containing lists of callsigns that the station will
+   read messages from (in addition to messages addressed to itself).
+   Such Message Groups are defined internally by the user at the
+   receiving station, and are used to filter received message traffic.
+
+   The receiving station will read all messages with the Addressee field
+   set to
+
+   ALL, QST or CQ.
+
+   The receiving station will only acknowledge messages addressed to
+   itself, and not any messages received which were addressed to any
+   group callsign.
+
+   **Note**: The receiving station will acknowledge all messages
+   addressed to itself, even if it is operating in an Alternate Net (see
+   Chapter 4: APRS Data in the AX.25 Destination and Source Address
+   Fields).
+
+   **General Bulletins** General bulletins are messages where the
+   addressee consists of the letters **BLN** followed by a
+   single-*digit* bulletin identifier, followed by 5 filler spaces.
+   General bulletins are generally transmitted a few times an hour for a
+   few hours, and typically contain time sensitive information (such as
+   weather status).
+
+   Bulletin text may be up to 67 characters long, and may contain any
+   printable ASCII characters except **\|** or **~**.
+
+   Bytes:
+
+   **Announcements** Announcements are similar to general bulletins,
+   except that the letters **BLN**
+
+   are followed by a single upper-case *letter* announcement identifier.
+   Announcements are transmitted much less frequently than bulletins
+   (but perhaps for several days), and although possibly timely in
+   nature they are usually not time critical.
+
+   Announcements are typically made for situations leading up to an
+   event, in contrast to bulletins which are typically used within the
+   event.
+
+   Users should be alerted on arrival of a new bulletin or announcement.
+
+   Bytes:
+
+   Bytes:
+
+   **Group Bulletins** Bulletins may be sent to *bulletin groups*. A
+   bulletin group address consists of the letters **BLN**, followed by a
+   single-*digit* group bulletin identifier, followed in turn by the
+   name of the group (up to 5 characters long, with filler spaces to pad
+   the name to 5 characters).
+
++----------+----------+----------+----------+----------+----------+
+|          |          |          |          |          |          |
+|  **Group |          |          |          |          |          |
+|          |          |          |          |          |          |
+| Bulletin |          |          |          |          |          |
+|          |          |          |          |          |          |
+| Format** |          |          |          |          |          |
++==========+==========+==========+==========+==========+==========+
+| **:**    |          |          |          |    **:** |          |
+|          |  **BLN** |  **Group |  **Group |          |  **Group |
+|          |          |          |          |          |          |
+|          |          | Bulletin |   Name** |          | Bulletin |
+|          |          |    ID**  |          |          |    Text  |
+|          |          |          |          |          |    (max  |
+|          |          |    n     |          |          |    67    |
+|          |          |          |          |          |    chara |
+|          |          |          |          |          | cters)** |
++----------+----------+----------+----------+----------+----------+
+| 1        |    3     |    1     |    5     |    1     |    0-67  |
++----------+----------+----------+----------+----------+----------+
+|          |          |          |          |          |          |
+|  Example |          |          |          |          |          |
+|          |          |          |          |          |          |
+|          |          |          |          |          |          |
+| :BLN4WX␣ |          |          |          |          |          |
+| ␣␣:Stand |          |          |          |          |          |
+|    by    |          |          |          |          |          |
+|    your  |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   snowpl |          |          |          |          |          |
+| owsGroup |          |          |          |          |          |
+|          |          |          |          |          |          |
+| bulletin |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   number |          |          |          |          |          |
+|    4 to  |          |          |          |          |          |
+|    the   |          |          |          |          |          |
+|    WX    |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   group. |          |          |          |          |          |
+|          |          |          |          |          |          |
+|    (Note |          |          |          |          |          |
+|    the   |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   filler |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   spaces |          |          |          |          |          |
+|    in    |          |          |          |          |          |
+|    the   |          |          |          |          |          |
+|    group |          |          |          |          |          |
+|          |          |          |          |          |          |
+|   name). |          |          |          |          |          |
++----------+----------+----------+----------+----------+----------+
+
+..
+
+   A receiving station can specify a list of bulletin groups of
+   interest. The list is defined internally by the user at the receiving
+   station. If a group is selected from the list, the station will only
+   copy bulletins for that group, plus any general bulletins. If the
+   list is empty, all bulletins are received and generate alerts.
+
+   **National Weather Service Bulletins**
+
+   Standard APRS message formats can be used for a variety of other
+   applications. For example, in the United States, special formatted
+   messages addressed to the generic callsign **NWS-**\ xxxxx are used
+   to highlight map areas involved in weather warnings, using the
+   following format:
+
+   Bytes:
+
+   **NTS Radiograms** APRS can be used to transport NTS radiograms. This
+   uses the existing APRS message format for backwards compatibility, by
+   adding a 3-character NTS format identifier **N**\ x\ **\\** at the
+   start of the APRS Message Text, as follows:
+
+   **N#\\**\ number\ **\\**\ precedence\ **\\**\ handling\ **\\**\ originator\ **\\**\ check\ **\\**\ place\ **\\**\ time\ **\\**\ date
+   **NA\\**\ address_line1\ **\\**\ address_line2\ **\\**\ address_line3\ **\\**\ address_line4
+   **NP\\**\ phone number
+
+   **N1\\**\ line 1 of NTS message text **N2\\**\ line 2 of NTS message
+   text **N3\\**\ line 3 of NTS message text **N4\\**\ line 4 of NTS
+   message text **N5\\**\ line 5 of NTS message text **N6\\**\ line 6 of
+   NTS message text **NS\\**\ Signature block
+
+   **NR\\**\ Received
+   from\ **\\**\ date_time\ **\\**\ sent_to\ **\\**\ date_time
+
+   All of these fields comes from the ARRL NTS Radiogram form and are
+   described in the NTS handbook.
+
+   Each message line is addressed to the same station.
+
+   The **N#\\**, **NA\\** and **NR\\** lines are multiple fields
+   combined for APRS transmission efficiency. The backslash separator is
+   used so that conventional forward slashes may be embedded in
+   messages. (The backslash does not exist in the RTTY or CW alphabets,
+   so it therefore cannot appear in an NTS radiogram).
+
+   Each line may be up 67 characters long, including the 3-character NTS
+   format identifier. Lines in excess of 67 characters will be
+   truncated.
+
+   There is a maximum of 6 lines of NTS message text.
+
+   **Note**: The **N#\\**, **NA\\**, **NS\\** and **NR\\** fields are
+   required. The others are optional.
+
+   Serialization of each line is handled by the normal APRS Message ID
+
+   **{**\ xxxxx.
+
+   An APRS application is not required to understand or generate these
+   messages. The information can be read and understood in the normal
+   message display.
+
+   **Obsolete Bulletin and Announcement**
+
+**Format**
+
+   Some stations transmit bulletins and announcements without the **:**
+   APRS Data Type Identifier. This format is obsolete. Some software may
+   still decode such data as a bulletin or announcement, but it should
+   now be interpreted as a Status Report.
+
+   **Bulletin and Announcement Implementation Recommendations**
+
+   Bulletins and announcements are seen as a way for all participants in
+   an event/emergency/net to see all common information posted to the
+   group. In this sense they are visualized as a mountain-top billboard
+   or a bulletin board on the wall of an Emergency Operations Control
+   Center.
+
+   Information that everyone must see is to be posted there. Information
+   is added and removed. Space is limited. Only so much information can
+   be posted before it becomes too busy for anyone to see everything.
+   Thus things are supposed to be posted, updated, and cleared to keep
+   the big billboard uncluttered and current with what everyone needs to
+   know at the present time. It should not be cluttered with obsolete
+   information.
+
+   This can be implemented in an APRS display system as a “Bulletin
+   Screen”. Everyone has this screen, and anyone can post or update
+   lines on this screen. At any instant, everyone in the network sees
+   exactly the same screen.
+
+   Everything is arranged and displayed in exactly the same way. Thus,
+   everyone, everywhere is looking at the same mountain-top billboard or
+   bulletin board. There is no ambiguity as to who sees what
+   information, in what order at what time.
+
+   To make this work, a number of issues should be considered:
+
+-  **Sorting**: Bulletins/Announcements are almost always multi-line,
+      and may arrive out of sequence. They must be sorted before
+      presentation on the Bulletin Screen, and re-sorted if necessary
+      when each new line arrives. This includes sorting by originating
+      callsign and Bulletin/ Announcement ID.
+
+-  **Replacement**: Stations sending bulletins/announcements can send
+      new lines to replace lines sent earlier, re-using the original
+      Bulletin/ Announcement IDs. (Note: It is only necessary to re-send
+      replacement lines. It is not necessary to re-send the whole
+      bulletin/announcement). Receipt of a new line with the same
+      Bulletin/Announcement ID as one already received from the same
+      station should result in the existing line being overwritten
+      (replaced).
+
+-  **Clearing**: A user should be able to clear any or all of the
+      bulletins/ announcements from the Bulletin Screen once he has read
+      them. Any bulletins/announcements that are still valid will
+      re-appear in due course because of the way they are redundantly
+      re-transmitted.
+
+-  **Alerts**: On receipt of any new or replacement line for the
+      Bulletin Screen, an alarm should be sounded and re-sounded
+      periodically until the user acknowledges it. Thus, this vital
+      information is “pushed” to the operator. There is no excuse for
+      not being aware of the current bulletin/ announcement state — this
+      is important in the hurried and crisis-laden scenario of an APRS
+      event.
+
+-  **Logging**: Old bulletins/announcements should be logged in
+      sequential APRS log files in case they are subsequently needed.
+
+STATION CAPABILITIES, QUERIES AND RESPONSES
+===========================================
+
+   **Station Capabilities** A station may define a set of one or more
+   attributes of the station, known as Station Capabilities. The station
+   transmits its capabilities in response to an IGATE query (see below),
+   using the **<** Data Type Identifier.
+
+   Each capability is a TOKEN or a TOKEN=VALUE pair. More than one
+   capability may be on a line, with each capability separated by a
+   comma.
+
+   Currently defined capabilities include:
+
+   IGATE,MSG_CNT=n,LOC_CNT=n
+
+   where IGATE defines the station as an IGate, MSG_CNT is the number of
+   messages transmitted, and LOC_CNT is the number of “local” stations
+   (those to which the IGate will pass messages in the local RF
+   network).
+
+   **Queries and Responses**
+
+   There are two types of APRS queries. One is general to all stations
+   and the other is in a message format directed to a single individual
+   station.
+
+   Queries always begin with a **?**, are one-time transmissions, do not
+   have a message identifier and should not be acknowledged. Similarly
+   the responses to queries are one-time transmissions that also do not
+   have a message identifier, so that they too are not acknowledged.
+
+   Each query contains a Query Type (in upper-case). The following Query
+   Types and expected responses are supported:
+
++-------------------+-----------------------+-----------------------+
+|    **Query Type** |    **Query**          |    **Response**       |
++===================+=======================+=======================+
+|    **APRS**       |    General — All      |    Station’s position |
+|                   |    stations query     |    and status         |
++-------------------+-----------------------+-----------------------+
+|    **APRSD**      |    Directed — Query   |    List of stations   |
+|                   |    an individual      |    heard direct       |
+|                   |    station for        |                       |
+|                   |    stations heard     |                       |
+|                   |    direct             |                       |
++-------------------+-----------------------+-----------------------+
+|    **APRSH**      |    Directed — Query   |    Position of heard  |
+|                   |    if an individual   |    station as an APRS |
+|                   |    station has heard  |    Object, plus heard |
+|                   |    a particular       |    statistics for the |
+|                   |    station            |    last 8 hours       |
++-------------------+-----------------------+-----------------------+
+|    **APRSM**      |    Directed — Query   |    All outstanding    |
+|                   |    an individual      |    messages for the   |
+|                   |    station for        |    querying station   |
+|                   |    outstanding        |                       |
+|                   |    unacknowledged or  |                       |
+|                   |    undelivered        |                       |
+|                   |    messages           |                       |
++-------------------+-----------------------+-----------------------+
+|    **APRSO**      |    Directed — Query   |    Station’s Objects  |
+|                   |    an individual      |                       |
+|                   |    station for its    |                       |
+|                   |    Objects            |                       |
++-------------------+-----------------------+-----------------------+
+|    **APRSP**      |    Directed — Query   |    Station’s position |
+|                   |    an individual      |                       |
+|                   |    station for its    |                       |
+|                   |    position           |                       |
++-------------------+-----------------------+-----------------------+
+|    **APRSS**      |    Directed — Query   |    Station’s status   |
+|                   |    an individual      |                       |
+|                   |    station for its    |                       |
+|                   |    status             |                       |
++-------------------+-----------------------+-----------------------+
+|    **APRST** or   |    Directed — Query   |    Route trace        |
+|                   |    an individual      |                       |
+|    **PING?**      |    station for a      |                       |
+|                   |    trace (i.e. path   |                       |
+|                   |    by which the       |                       |
+|                   |    packet was heard)  |                       |
++-------------------+-----------------------+-----------------------+
+|    **IGATE**      |    General — Query    |    IGate station      |
+|                   |    all Internet       |    capabilities       |
+|                   |    Gateways           |                       |
++-------------------+-----------------------+-----------------------+
+|    **WX**         |    General — Query    |    Weather report     |
+|                   |    all weather        |    (and the station’s |
+|                   |    stations           |    position if it is  |
+|                   |                       |    not included in    |
+|                   |                       |    the Weather        |
+|                   |                       |    Report)            |
++-------------------+-----------------------+-----------------------+
+
+..
+
+   Bytes:
+
+   If a queried station has no relevant information to include in a
+   response, it need not respond.
+
+   A queried station should ignore any query that it does not recognize.
+
+   **General Queries** The format of a general query is as follows:
+
++-------+-------+-------+-------+-------+-------+-------+-------+---+
+|       |       |       |       |       |       |       |       |   |
+|  **Ge |       |       |       |       |       |       |       |   |
+| neral |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| Query |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   For |       |       |       |       |       |       |       |   |
+| mat** |       |       |       |       |       |       |       |   |
++=======+=======+=======+=======+=======+=======+=======+=======+===+
+|       |    ** |       |       |       |       |       |       |   |
+| **?** | Query | **?** |   **T |       |       |       |       |   |
+|       |    T  |       | arget |       |       |       |       |   |
+|       | ype** |       |    F  |       |       |       |       |   |
+|       |       |       | ootpr |       |       |       |       |   |
+|       |       |       | int** |       |       |       |       |   |
++-------+-------+-------+-------+-------+-------+-------+-------+---+
+|       |       |       |    ** |       |       |       |       |   |
+|       |       |       | Lat** | **,** |   **L | **,** | **Rad |   |
+|       |       |       |       |       | ong** |       | ius** |   |
++-------+-------+-------+-------+-------+-------+-------+-------+---+
+|    1  |    n  |    1  |    n  |    1  |    n  |    1  |    4  |   |
++-------+-------+-------+-------+-------+-------+-------+-------+---+
+|       |       |       |       |       |       |       |       |   |
+|   Exa |       |       |       |       |       |       |       |   |
+| mples |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| Query |       |       |       |       |       |       |       |   |
+|    Ty |       |       |       |       |       |       |       |   |
+| pical |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   Res |       |       |       |       |       |       |       |   |
+| ponse |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    ?  |       |       |       |       |       |       |       |   |
+| APRS? |       |       |       |       |       |       |       |   |
+|    /0 |       |       |       |       |       |       |       |   |
+| 92345 |       |       |       |       |       |       |       |   |
+| z4903 |       |       |       |       |       |       |       |   |
+| .50N/ |       |       |       |       |       |       |       |   |
+| 07201 |       |       |       |       |       |       |       |   |
+| .75W> |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    Ge |       |       |       |       |       |       |       |   |
+| neral |       |       |       |       |       |       |       |   |
+|    q  |       |       |       |       |       |       |       |   |
+| uery, |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  with |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   sta |       |       |       |       |       |       |       |   |
+| ndard |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| posit |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   and |       |       |       |       |       |       |       |   |
+|    s  |       |       |       |       |       |       |       |   |
+| tatus |       |       |       |       |       |       |       |   |
+|    re |       |       |       |       |       |       |       |   |
+| ply.> |       |       |       |       |       |       |       |   |
+| 09234 |       |       |       |       |       |       |       |   |
+| 5zNet |       |       |       |       |       |       |       |   |
+|    Co |       |       |       |       |       |       |       |   |
+| ntrol |       |       |       |       |       |       |       |   |
+|    C  |       |       |       |       |       |       |       |   |
+| enter |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   ?AP |       |       |       |       |       |       |       |   |
+| RS?\  |       |       |       |       |       |       |       |   |
+| **␣** |       |       |       |       |       |       |       |   |
+| \ 34. |       |       |       |       |       |       |       |   |
+| 02,-1 |       |       |       |       |       |       |       |   |
+| 17.15 |       |       |       |       |       |       |       |   |
+| ,0200 |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  /340 |       |       |       |       |       |       |       |   |
+| 2.78N |       |       |       |       |       |       |       |   |
+| 11714 |       |       |       |       |       |       |       |   |
+| .02W- |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    Ge |       |       |       |       |       |       |       |   |
+| neral |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| query |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   for |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   sta |       |       |       |       |       |       |       |   |
+| tions |       |       |       |       |       |       |       |   |
+|    w  |       |       |       |       |       |       |       |   |
+| ithin |       |       |       |       |       |       |       |   |
+|    a  |       |       |       |       |       |       |       |   |
+|    t  |       |       |       |       |       |       |       |   |
+| arget |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  foot |       |       |       |       |       |       |       |   |
+| print |       |       |       |       |       |       |       |   |
+| >Digi |       |       |       |       |       |       |       |   |
+|    on |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   low |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| power |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    of |       |       |       |       |       |       |       |   |
+|    r  |       |       |       |       |       |       |       |   |
+| adius |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   200 |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| miles |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   cen |       |       |       |       |       |       |       |   |
+| tered |       |       |       |       |       |       |       |   |
+|    on |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| 34.02 |       |       |       |       |       |       |       |   |
+|    de |       |       |       |       |       |       |       |   |
+| grees |       |       |       |       |       |       |       |   |
+|    n  |       |       |       |       |       |       |       |   |
+| orth, |       |       |       |       |       |       |       |   |
+|    1  |       |       |       |       |       |       |       |   |
+| 17.15 |       |       |       |       |       |       |       |   |
+|    de |       |       |       |       |       |       |       |   |
+| grees |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| west, |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  with |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   sta |       |       |       |       |       |       |       |   |
+| ndard |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| posit |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   and |       |       |       |       |       |       |       |   |
+|    s  |       |       |       |       |       |       |       |   |
+| tatus |       |       |       |       |       |       |       |   |
+|    r  |       |       |       |       |       |       |       |   |
+| eply. |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| (Note |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   the |       |       |       |       |       |       |       |   |
+|    le |       |       |       |       |       |       |       |   |
+| ading |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| space |       |       |       |       |       |       |       |   |
+|    in |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   the |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  lati |       |       |       |       |       |       |       |   |
+| tude, |       |       |       |       |       |       |       |   |
+|    as |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   its |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| value |       |       |       |       |       |       |       |   |
+|    is |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  posi |       |       |       |       |       |       |       |   |
+| tive, |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   see |       |       |       |       |       |       |       |   |
+|    be |       |       |       |       |       |       |       |   |
+| low). |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    ?I |       |       |       |       |       |       |       |   |
+| GATE? |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   <IG |       |       |       |       |       |       |       |   |
+| ATE,M |       |       |       |       |       |       |       |   |
+| SG_CN |       |       |       |       |       |       |       |   |
+| T=43, |       |       |       |       |       |       |       |   |
+| LOC_C |       |       |       |       |       |       |       |   |
+| NT=14 |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|    Ge |       |       |       |       |       |       |       |   |
+| neral |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| query |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   for |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| IGate |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  stat |       |       |       |       |       |       |       |   |
+| ions, |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  with |       |       |       |       |       |       |       |   |
+|    a  |       |       |       |       |       |       |       |   |
+|    St |       |       |       |       |       |       |       |   |
+| ation |       |       |       |       |       |       |       |   |
+|    Ca |       |       |       |       |       |       |       |   |
+| pabil |       |       |       |       |       |       |       |   |
+| ities |       |       |       |       |       |       |       |   |
+|    r  |       |       |       |       |       |       |       |   |
+| eply. |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  ?WX? |       |       |       |       |       |       |       |   |
+|    \_ |       |       |       |       |       |       |       |   |
+| 10090 |       |       |       |       |       |       |       |   |
+| 556c2 |       |       |       |       |       |       |       |   |
+| 20s00 |       |       |       |       |       |       |       |   |
+| 4g005 |       |       |       |       |       |       |       |   |
+| t077… |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| Query |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   for |       |       |       |       |       |       |       |   |
+|    we |       |       |       |       |       |       |       |   |
+| ather |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  stat |       |       |       |       |       |       |       |   |
+| ions, |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|  with |       |       |       |       |       |       |       |   |
+|    a  |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| stand |       |       |       |       |       |       |       |   |
+| ard/0 |       |       |       |       |       |       |       |   |
+| 90556 |       |       |       |       |       |       |       |   |
+| z4903 |       |       |       |       |       |       |       |   |
+| .50N/ |       |       |       |       |       |       |       |   |
+| 07201 |       |       |       |       |       |       |       |   |
+| .75W> |       |       |       |       |       |       |       |   |
+|    We |       |       |       |       |       |       |       |   |
+| ather |       |       |       |       |       |       |       |   |
+|    R  |       |       |       |       |       |       |       |   |
+| eport |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| reply |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   (wi |       |       |       |       |       |       |       |   |
+| thout |       |       |       |       |       |       |       |   |
+|    a  |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+| posit |       |       |       |       |       |       |       |   |
+| ion), |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   fol |       |       |       |       |       |       |       |   |
+| lowed |       |       |       |       |       |       |       |   |
+|    by |       |       |       |       |       |       |       |   |
+|    a  |       |       |       |       |       |       |       |   |
+|       |       |       |       |       |       |       |       |   |
+|   sta |       |       |       |       |       |       |       |   |
+| ndard |       |       |       |       |       |       |       |   |
+|    p  |       |       |       |       |       |       |       |   |
+| osit. |       |       |       |       |       |       |       |   |
++-------+-------+-------+-------+-------+-------+-------+-------+---+
+
+..
+
+   In the case of an ?APRS? query for stations within a particular
+   target footprint, the latitude and longitude parameters are in
+   *floating point* degrees (*not* in APRS lat/long position format).
+
+-  North and east coordinates are positive values, indicated by a
+      leading **␣**
+
+..
+
+   (space).
+
+-  South and west coordinates are negative values.
+
+-  The radius of the footprint is in miles, expressed as a fixed 4-digit
+      number in whole miles.
+
+..
+
+   All stations inside the specified coverage circle should respond with
+   a Position Report and a Status Report.
+
+**Directed Station**
+
+**Queries**
+
+   Queries addressed to individual stations are in APRS message format
+   (except that they never include a message identifier). The addressee
+   is the callsign of the station being queried.
+
+   The message text is the Query Type. This is followed optionally by
+   another callsign — this callsign does not need filler spaces as it is
+   at the end of the data.
+
+   Bytes:
+
+STATUS REPORTS
+==============
+
+   A Status Report announces the station’s current mission or any other
+   single line status to everyone. The report is contained in the AX.25
+   Information field, and starts with the **>** APRS Data Type
+   Identifier.
+
+   The report may optionally contain a timestamp.
+
+   **Note**: The timestamp can *only* be in DHM *zulu* format.
+
+   The status text occupies the rest of the Information field, and may
+   be up to 62 characters long (if there is no timestamp in the report)
+   or 55 characters (if there is a timestamp). The text may contain any
+   printable ASCII characters except **\|** or **~**.
+
+   Bytes:
+
+   Although the status will usually be plain language text, there are
+   two cases where the report can contain special information which can
+   be decoded:
+
+-  Beam Heading and Power
+
+-  Maidenhead grid locator
+
+..
+
+   **Status Report with Beam Heading and Effective Radiated**
+
+**Power**
+
+   It is useful to include beam heading and ERP in packets in meteor
+   scatter work. To keep packets as short as possible, these parameters
+   are encoded into two characters, as follows:
+
+   H = beam heading / 10
+
+   (H=0–9 for 0–90 degrees, and A–Z for 100–350 degrees).
+
+   P = ERP code.
+
+   The HP value appears as the *last* two characters of the status text,
+   preceded by the **^** character — for example, **^B7** means a beam
+   heading of 110 degrees and an ERP of 490 watts.
+
+   The HP value may be combined with the Maidenhead grid locator (as
+   described below), or with any other plain language status text.
+
+   **Status Report with Maidenhead Grid**
+
+**Locator**
+
+   The Maidenhead grid locator may be 4 or 6 characters long, and must
+   immediately follow the **>** Data Type Identifier.
+
+   All letters must be transmitted in upper case. Letters may be
+   received in upper case or lower case.
+
+   The Symbol Table Identifier and Symbol Code follow the locator.
+
+   If the report also contains status text, the first character of the
+   text *must* be a space.
+
+   A Status Report with Maidenhead locator can not have a timestamp.
+
+   Bytes:
+
+**Transmitting Status**
+
+**Reports**
+
+   Each station should only transmit a Status Report once every net
+   cycle time (i.e. once every 10, 20 or 30 minutes), or in response to
+   a query.
+
+NETWORK TUNNELING AND THIRD-PARTY DIGIPEATING
+=============================================
+
+   **Third-Party Networks**
+
+   APRS provides a mechanism for formatting packets that are to be
+   transported through third-party (i.e. non AX.25) networks, such as
+   the Internet, an Ethernet LAN or a direct wire connection.
+
+   These networks do not understand APRS source, destination and
+   digipeater addresses, so it is necessary to send them as data, along
+   with the original data being transmitted.
+
+   **Source Path Header** Prior to sending an APRS packet into the
+   third-party network, the APRS address path is prepended to the Data
+   Type Identifier and the rest of the original data.
+
+   The prepended address path is known as the Source Path Header. It
+   consists of the source, destination and digipeater callsigns, with
+   associated SSIDs.
+
+   The main purpose of introducing the Source Path Header is to allow
+   receiving stations on the far side of the third-party network to
+   identify the sender — this is needed when acknowledging receipt of a
+   message, for example. Knowledge of the source path is also useful in
+   diagnosing network problems.
+
+   Bytes:
+
+   The Source Path Header may be in either of two formats, known as the
+   “TNC-2” format and the “AEA” format (so called because when TNC-2 or
+   AEA-compatible TNCs are operating in terminal MONitor mode they
+   automatically produce headers in these formats).
+
+   The APRS Working Group has agreed to move towards standardization on
+   the “TNC-2” format in future implementations.
+
+   In most cases, AEA TNCs will produce Source Path Headers in “TNC-2”
+   format when BBSMSGS is set to ON.
+
+Bytes:
+
+Bytes:
+
+   The formats of these headers are as follows:
+
++-----------+----------+-----------+-----------+-----------+---+
+|           |          |           |           |           |   |
+|  **Source |          |           |           |           |   |
+|    Path   |          |           |           |           |   |
+|    Header |          |           |           |           |   |
+|    —      |          |           |           |           |   |
+|           |          |           |           |           |   |
+|   “TNC-2” |          |           |           |           |   |
+|           |          |           |           |           |   |
+|  Format** |          |           |           |           |   |
+|           |          |           |           |           |   |
+|    An     |          |           |           |           |   |
+|           |          |           |           |           |   |
+|  asterisk |          |           |           |           |   |
+|           |          |           |           |           |   |
+|   follows |          |           |           |           |   |
+|    the    |          |           |           |           |   |
+|    d      |          |           |           |           |   |
+| igipeater |          |           |           |           |   |
+|           |          |           |           |           |   |
+|  callsign |          |           |           |           |   |
+|    heard. |          |           |           |           |   |
++===========+==========+===========+===========+===========+===+
+|           |    **>** |    **De   |    **0-8  |    **:**  |   |
+|  **Source |          | stination |    Digi   |           |   |
+|           |          |    C      | peaters** |           |   |
+|  Callsign |          | allsign** |           |           |   |
+|           |          |           |           |           |   |
+|  (-**\ SS |          |    *      |           |           |   |
+| ID\ **)** |          | *(-**\ SS |           |           |   |
+|           |          | ID\ **)** |           |           |   |
++-----------+----------+-----------+-----------+-----------+---+
+|           |          |           |    **,**  |    **D    |   |
+|           |          |           |           | igipeater |   |
+|           |          |           |           |    C      |   |
+|           |          |           |           | allsign** |   |
+|           |          |           |           |           |   |
+|           |          |           |           |    **(-   |   |
+|           |          |           |           | **\ SSID\ |   |
+|           |          |           |           |  **)(*)** |   |
++-----------+----------+-----------+-----------+-----------+---+
+|    1-9    |    1     |    1-9    |    0-81   |    1      |   |
++-----------+----------+-----------+-----------+-----------+---+
+|           |          |           |           |           |   |
+|   Example |          |           |           |           |   |
+|           |          |           |           |           |   |
+|           |          |           |           |           |   |
+| WB4APR-14 |          |           |           |           |   |
+| >APRS,REL |          |           |           |           |   |
+| AY*,WIDE: |          |           |           |           |   |
+|           |          |           |           |           |   |
+|    (WIDE  |          |           |           |           |   |
+|    d      |          |           |           |           |   |
+| igipeater |          |           |           |           |   |
+|           |          |           |           |           |   |
+| “unused”) |          |           |           |           |   |
++-----------+----------+-----------+-----------+-----------+---+
+
++-----------+-----------+-----------+-----------+----------+---+
+|           |           |           |           |          |   |
+|  **Source |           |           |           |          |   |
+|    Path   |           |           |           |          |   |
+|    Header |           |           |           |          |   |
+|    —      |           |           |           |          |   |
+|    “AEA”  |           |           |           |          |   |
+|           |           |           |           |          |   |
+|  Format** |           |           |           |          |   |
+|           |           |           |           |          |   |
+|    An     |           |           |           |          |   |
+|           |           |           |           |          |   |
+|  asterisk |           |           |           |          |   |
+|           |           |           |           |          |   |
+|   follows |           |           |           |          |   |
+|    the    |           |           |           |          |   |
+|    source |           |           |           |          |   |
+|    or     |           |           |           |          |   |
+|    d      |           |           |           |          |   |
+| igipeater |           |           |           |          |   |
+|           |           |           |           |          |   |
+|  callsign |           |           |           |          |   |
+|    heard. |           |           |           |          |   |
++===========+===========+===========+===========+==========+===+
+|           |    **0-8  |    **>**  |    **De   |    **:** |   |
+|  **Source |    Digi   |           | stination |          |   |
+|    C      | peaters** |           |    C      |          |   |
+| allsign** |           |           | allsign** |          |   |
+|           |           |           |           |          |   |
+|    **(-   |           |           |    *      |          |   |
+| **\ SSID\ |           |           | *(-**\ SS |          |   |
+|  **)(*)** |           |           | ID\ **)** |          |   |
++-----------+-----------+-----------+-----------+----------+---+
+|           |    **>**  |    **D    |           |          |   |
+|           |           | igipeater |           |          |   |
+|           |           |    C      |           |          |   |
+|           |           | allsign** |           |          |   |
+|           |           |           |           |          |   |
+|           |           |    **(-   |           |          |   |
+|           |           | **\ SSID\ |           |          |   |
+|           |           |  **)(*)** |           |          |   |
++-----------+-----------+-----------+-----------+----------+---+
+|    1-10   |    0-81   |    1      |    1-9    |    1     |   |
++-----------+-----------+-----------+-----------+----------+---+
+|           |           |           |           |          |   |
+|   Example |           |           |           |          |   |
+|           |           |           |           |          |   |
+|           |           |           |           |          |   |
+| WB4APR-14 |           |           |           |          |   |
+| >RELAY*>W |           |           |           |          |   |
+| IDE>APRS: |           |           |           |          |   |
+|           |           |           |           |          |   |
+|    (WIDE  |           |           |           |          |   |
+|    d      |           |           |           |          |   |
+| igipeater |           |           |           |          |   |
+|           |           |           |           |          |   |
+| “unused”) |           |           |           |          |   |
++-----------+-----------+-----------+-----------+----------+---+
+
+..
+
+   In both formats, the SSID may be omitted if it is –0.
+
+   In both formats, the callsign of the digipeater from which the
+   incoming packet was heard is indicated with an asterisk.
+   (Alternatively, for “AEA” format only, the asterisk will follow the
+   source callsign if the packet was heard direct from there).
+
+   Any digipeaters following the callsign of the station from which the
+   packet was heard are termed “unused”. These unused digipeaters are
+   stripped out when building a Third-Party Header (see below).
+
+   **Third-Party Header** After a packet emerges from a third-party
+   network, the receiving gateway station modifies it (by inserting a
+   **}** Third-Party Data Type Identifier and modifying the Source Path
+   Header) before transmitting it on the local APRS network.
+
+   The modified Source Path Header is called the Third-Party Header.
+
+   Bytes:
+
+   In a similar way to the Source Path Header, The Third-Party Header
+   can be in either of two formats: “TNC-2” or “AEA” format.
+
+   Bytes:
+
+   Bytes:
+
+   In both cases, the “unused” digipeater callsigns (i.e. those
+   digipeater callsigns after the asterisk) in the original Source Path
+   Header are stripped out. The asterisk itself is also stripped out of
+   the Source Path Header.
+
+   Then two additional callsigns are inserted:
+
+-  The Third-Party Network Identifier (e.g. TCPIP). This is a dummy
+      “callsign” that identifies the nature of the third-party network.
+
+-  The callsign of the receiving gateway station, followed by an
+      asterisk.
+
+..
+
+   **Action on Receiving a Third-**
+
+   **Party packet**
+
+   When another station receives a third-party packet, it can extract
+   the callsign of the original sending station from the Third-Party
+   Header, if it is needed to acknowledge receipt of a message.
+
+   The other addresses in the Third-Party Header may be useful for
+   network diagnostic purposes.
+
+   **An Example of Sending a Message through the Internet**
+
+   The Scenario:
+
+-  WB4APR-14 wants to send a message via the Internet to G3NRW.
+
+-  The nearest Internet gateway to WB4APR-14 is K4HG, reachable via a
+
+..
+
+   RELAY,WIDE path.
+
+-  The nearest Internet gateway to G3NRW is G9RXG. The Process:
+
+-  In the normal way, WB4APR-14 builds a message packet that contains:
+
+..
+
+   **:G3NRW␣ ␣ ␣ ␣:Hi Ian{001**
+
+-  WB4APR-14 transmits the packet via his UNPROTO path RELAY,WIDE.
+
+-  The Internet gateway K4HG happens to receive this packet from the
+      RELAY
+
+..
+
+   digipeater in the path.
+
+-  K4HG builds a new packet that contains the source path and the
+      original message:
+
+..
+
+   **WB4APR-14>APRS,RELAY*,WIDE::G3NRW␣ ␣ ␣ ␣:Hi Ian{001**
+
+-  K4HG sends this packet (using telnet) to an APRServer on the
+      Internet.
+
+-  All Internet gateways throughout the world that are connected to the
+      APRServe network (including G9RXG) receive the packet.
+
+-  G9RXG converts the packet into a Third-Party packet:
+
+..
+
+   **}WB4APR-14>APRS,RELAY,TCPIP,G9RXG*::G3NRW␣ ␣ ␣ ␣:Hi Ian{001**
+
+   Note that the WIDE digipeater was stripped out of the header because
+   it was unused.
+
+-  G9RXG transmits the packet over the local APRS network.
+
+-  G3NRW receives the packet, strips out the Third-Party Header, and
+      discovers that the packet contains a message for him. From the
+      header, G3NRW then establishes that the acknowledgement is to go
+      back to WB4APR-14.
+
+USER-DEFINED DATA FORMAT
+========================
+
+   The APRS protocol defines many different data formats, but it cannot
+   anticipate every possible data type that programmers may wish to
+   send. The User-Defined data format is designed to fill these gaps.
+   Under this system, program authors are free to send data in any
+   format they choose.
+
+   The data in the AX.25 Information field consists of a three-character
+   header:
+
+   **{**\ APRS Data Type Identifier.
+
+   UA one-character User ID.
+
+   XA one-character user-defined packet type.
+
+   The APRS Working Group will issue User IDs to program authors who
+   express a need.
+
+   [Keep in mind there is a limited number of available User IDs, so
+   please do not request one unless you have a true need. The Working
+   Group may require an explanation of your need prior to issuing a
+   character. If only one or two data formats are needed, those may be
+   issued from a User ID pool].
+
+   For experimentation, or prior to being issued a User ID, anyone may
+   utilize the User ID character of **{** without prior notification or
+   approval (i.e. packets beginning with **{{** are experimental, and
+   may be sent by anyone).
+
+   **Important Note**: Although there is no restriction on the nature of
+   user- defined data, it is highly recommended that it is represented
+   in printable 7-bit ASCII character form.
+
+   Bytes:
+
+   This is envisioned as a way for authors to experiment and build in
+   features specific to their programs, without the danger of a
+   non-standard packet crashing other authors’ programs. In keeping with
+   the spirit of the APRS protocol, authors are encouraged to make these
+   formats public. The APRS Working Group will maintain a web site
+   defining all of the assigned User IDs, and either the packet formats
+   provided by the author, or links to their
+
+   own web sites which define their formats.
+
+   Generally, all formats using this method will be considered optional.
+   No program is required to decode any of these packets, and must
+   ignore any it does not decode. However, it is possible that in the
+   future some of these formats may prove to be of sufficient utility
+   and interest to the entire APRS community that they will be
+   specifically included in future versions of the APRS protocol.
+
+OTHER PACKETS
+=============
+
+**Invalid Data or**
+
+   **Test Data Packets**
+
+   To indicate that a packet contains invalid data, or test data that
+   does not conform to any standard APRS format, the **,** Data Type
+   Identifier is used.
+
+   For example, the Mic-E unit will generate such a packet if it detects
+   that a received GPS sentence is not valid.
+
+   Bytes:
+
+   **All Other Packets** Packets that do not meet any of the formats
+   described in this document are assumed to be non-APRS beacons.
+   Programs can decide to handle these, or ignore them, but they must be
+   able to process them without ill effects.
+
+   APRS programs may treat such packets as APRS Status Reports. This
+   allows APRS to accept any UI packet addressed to the typical beacon
+   address to be captured as a status message. Typical TNC ID packets
+   fall into this category. Once a proper Status Report (with the APRS
+   Data Type Identifier **>**) has been received from a station it will
+   not be overwritten by other non-APRS packets from that station.
+
+APRS SYMBOLS
+============
+
+   **Three Methods** There are three methods of specifying an APRS
+   symbol (display icon):
+
+-  In the AX.25 Information field.
+
+-  In the AX.25 Destination Address.
+
+-  In the SSID of the AX.25 Source Address.
+
+..
+
+   The preferred method is to include the symbol in the Information
+   field. However, where this is not possible (for example, in
+   stand-alone trackers with no means of introducing the symbol into the
+   Information field), either of the other two methods may be used
+   instead.
+
+   **The Symbol Tables** There are two APRS Symbol Tables:
+
+-  Primary Symbol Table
+
+-  Alternate Symbol Table
+
+..
+
+   See Appendix 2 for a full listing of these tables.
+
+   The essential difference between the Primary and Alternate Symbol
+   Tables is that some of the symbols in the Alternate Symbol Table can
+   be overlaid with an alphanumeric character. For example, a “car” icon
+   in the Alternate Symbol Table could be overlaid with the digit “3”,
+   to indicate it is car #3.
+
+   Symbols capable of taking an overlay are marked as **[with
+   overlay**\ *]*. None of the symbols in the Primary Symbol Table can
+   be overlaid. In the tables, each symbol is coded in three ways:
+
+-  **/$** or **\\$** — for symbols in the Information field.
+
+-  **GPSxyz** — for generic Destination addresses containing symbols.
+
+-  **GPSCnn** or **GPSEnn** — another form of generic Destination
+      addresses containing systems.
+
+..
+
+   In addition, 15 of the symbols in the Primary Symbol Table have an
+   associated SSID (e.g. a small aircraft has SSID -7). The SSID is
+   intended for use in the AX.25 Source Address of stand-alone trackers
+   which have no other means of specifying the symbol.
+
+   **Symbols in the AX.25 Information**
+
+**Field**
+
+   A symbol in the AX.25 Information field is a combination of a
+   one-character Symbol Table Identifier and a one-character Symbol
+   Code.
+
+   For example, in the Position Report:
+   @092345z4903.50N\ **/**\ 07201.75W\ **>**\ 088/036…
+
+   the forward slash **/** is the Symbol Table Identifier and the **>**
+   character is the Symbol Code (in this case representing a “car” icon)
+   from the selected table.
+
+   The Symbol Table Identifier character selects one of the two Symbol
+   Tables, or it may be used as single-character (alpha or numeric)
+   overlay, as follows:
+
++--------------------------------+------------------------------------+
+|    **Symbol Table Identifier** |    **Selected Table or Overlay     |
+|                                |    Symbol**                        |
++================================+====================================+
+|    **/**                       |    Primary Symbol Table (mostly    |
+|                                |    stations)                       |
++--------------------------------+------------------------------------+
+|    **\\**                      |    Alternate Symbol Table (mostly  |
+|                                |    Objects)                        |
++--------------------------------+------------------------------------+
+|    **0**-**9**                 |    Numeric overlay. Symbol from    |
+|                                |    Alternate Symbol Table          |
+|                                |    (*uncompressed* lat/long data   |
+|                                |    format)                         |
++--------------------------------+------------------------------------+
+|    **a**-**j**                 |    Numeric overlay. Symbol from    |
+|                                |    Alternate Symbol Table          |
+|                                |    (*compressed* lat/long data     |
+|                                |    format only). i.e. a-j maps to  |
+|                                |    0-9                             |
++--------------------------------+------------------------------------+
+|    **A**-**Z**                 |    Alpha overlay. Symbol from      |
+|                                |    Alternate Symbol Table          |
++--------------------------------+------------------------------------+
+
+..
+
+   In the generic case, a symbol from the Primary Symbol Table is
+   represented as the character-pair **/$**, and a symbol from the
+   Alternate Symbol Table as
+
+   **\\$**.
+
+   **Overlays with Symbols in the AX.25 Information**
+
+**Field**
+
+   Where the Symbol Table Identifier is 0-9 or A-Z (or a-j with
+   *compressed* position data only), the symbol comes from the
+   *Alternate* Symbol Table, and is overlaid with the identifier (as a
+   single digit or a capital letter).
+
+   For example, in the *uncompressed* Position Report:
+
+   @092345z4903.50N\ **3**\ 07201.75W\ **>**\ …
+
+   the digit **3** following the latitude will cause the number “3” to
+   be overlaid on top of the “car” icon (**Note**: Because the symbol is
+   overlaid, the **>** Symbol Code here comes from the *Alternate*
+   Symbol Table).
+
+   Similarly, to overlay a “car” icon with the letter “B” in a
+   *compressed*
+
+   Position Report, the report will look something like:
+
+   =\ **B**\ L!!<*e7 **>**\ 7P[
+
+   However, in a *compressed* Position Report, it is not permissible to
+   use a *numeric* Symbol Table Identifier (0-9) — *compressed*
+   positions never start with a digit. If a numeric overlay is required,
+   the report must use a lower-case letter instead (in the range
+   **a**-**j**) as the Symbol Table Identifier. The lower- case letter
+   is then mapped to the digits **0**-**9** (i.e. a=0, b=1, c=2, d=3
+   etc).
+
+   Thus, in the *compressed* Position Report:
+
+   =\ **d**\ 5L!!<*e7 **>**\ 7P[
+
+   the letter **d** maps to overlay character “3”.
+
+   As noted above, not all symbols from the Alternate Symbol Table may
+   be overlaid in this way — those that can be overlaid are marked as
+   **[with overlay]** in Appendix 2. This means that they are *capable*
+   of taking an overlay, but they do not necessarily need to have one.
+   Thus, for example, the following report uses the car symbol from the
+   Alternate Symbol Table, but does not display an overlay:
+
+   @092345z4903.50N\ **\\**\ 07201.75W\ **>**\ …
+
+   **Symbols in the AX.25 Destination**
+
+**Address**
+
+   Where it is not possible to include a symbol in the Information
+   field, the symbol may be specified in the AX.25 Destination Address
+   instead, using the following generic destination addresses: GPSxyz,
+   GPSCnn, GPSEnn, SPCxyz and SYMxyz.
+
+   The characters xy and nn refer to entries in the APRS Symbol Tables.
+   For example, from the Primary Symbol Table, a tracker could use the
+   Destination Address GPS\ **MV␣** or GPS\ **30** to specify a “car”
+   icon.
+
+   The character z specifies the overlay character (where permitted), or
+   is a **␣**
+
+   (space) — the space is a filler character, as all AX.25 addresses
+   must be
+
+   exactly 6 characters long.
+
+   The GPS/SPC/SYMxy␣ and GPSCnn/GPSEnn addresses can be used
+   interchangeably. Thus, for example, GPSBM␣ , SPCBM␣ , SYMBM␣ and
+   GPSC12 all specify a “Boy Scouts” icon (from the Primary Symbol
+   Table), and GPSOM␣ , SPCOM␣ , SYMOM␣ and GPSE12 all specify a “Girl
+   Scouts” icon (from the Alternate Symbol Table).
+
+   **Overlays with Symbols in the AX.25 Destination**
+
+**Address**
+
+   If the z character in a GPSxyz, SPCxyz or SYMxyz address is not a
+   space, it specifies an alphanumeric overlay character, in the range
+   0-9 or A-Z.
+
+   Overlays can only be used with symbols from the Alternate Symbol
+   Table marked with the legend **[with overlay]**.
+
+   For example, if the “car” icon is to be overlaid with a digit “3”,
+   the Destination Address will be GPS\ **NV3**.
+
+   However, even if the address is overlay-capable, it is not actually
+   necessary to specify an overlay; e.g. GPS\ **NV␣**.
+
+   GPSCnn and GPSEnn symbols can not have overlays.
+
+   **Symbol in the Source Address**
+
+**SSID**
+
+   Where it is not possible to include a symbol in the Information field
+   or in the Destination Address, the symbol may be specified in the
+   SSID of the Source Address instead:
+
+SSID-Specified Icons in the AX.25 Source Address Field
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   **Symbol Precedence** APRS packets should not contain more than one
+   symbol. However, it is conceivably possible to (erroneously)
+   construct a packet containing up to three different symbols.
+
+   For example:
+
++---------------+----------------+----------------+----------------+
+|               |    **Source    |                |                |
+|               |    Address     |  **Destination |  **Information |
+|               |    SSID**      |    Address**   |    Field**     |
++===============+================+================+================+
+|               |    G3NR        |    **MV**!0123 | .45N           |
+|               | W\ **-7**\ GPS |                | **/**\ 01      |
+|               |                |                | 234.56W\ **j** |
++---------------+----------------+----------------+----------------+
+|    **Symbol** |    Small       |    Car         |    Jeep        |
+|               |    Aircraft    |                |                |
++---------------+----------------+----------------+----------------+
+
+..
+
+   In such a situation:
+
+-  The symbol in the Information field takes precedence over any other
+      symbol.
+
+-  If there is no symbol in the Information field, the symbol in the
+      Destination Address takes precedence over the symbol in the Source
+      Address SSID.
+
+APPENDIX 1: APRS DATA FORMATS
+=============================
+
+   This Appendix contains format diagrams for all APRS data formats. The
+   gray fields are optional. Shaded (yellow) characters are literal
+   ASCII characters.
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|    ** |       |       |       |       |       |       |       |       |
+| Compr |       |       |       |       |       |       |       |       |
+| essed |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |
+|   Lat |       |       |       |       |       |       |       |       |
+| /Long |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |
+|   Pos |       |       |       |       |       |       |       |       |
+| ition |       |       |       |       |       |       |       |       |
+|    R  |       |       |       |       |       |       |       |       |
+| eport |       |       |       |       |       |       |       |       |
+|    F  |       |       |       |       |       |       |       |       |
+| ormat |       |       |       |       |       |       |       |       |
+|    —  |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |
+|  with |       |       |       |       |       |       |       |       |
+|    T  |       |       |       |       |       |       |       |       |
+| imest |       |       |       |       |       |       |       |       |
+| amp** |       |       |       |       |       |       |       |       |
++=======+=======+=======+=======+=======+=======+=======+=======+=======+
+|       |    *  |       |    *  |    *  |       |    ** |    *  |       |
+| **/** | *Time | **Sym | *Comp | *Comp |   **S | Compr | *Comp |  **Co |
+|       |       |       |       |    L  | ymbol | essed |    T  | mment |
+|  *or* |   DHM | Table | Lat** | ong** |    C  |       | ype** |       |
+|       |    /  |       |       |       | ode** |  Cour |    T  |  (max |
+|       |       |  ID** |  YYYY |  XXXX |       | se/Sp |       |    40 |
+| **@** | HMS** |       |       |       |       | eed** |       |       |
+|       |       |       |       |       |       |       |       |   cha |
+|       |       |       |       |       |       |       |       | rs)** |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|       |       |       |       |       |       |    ** |       |       |
+|       |       |       |       |       |       | Compr |       |       |
+|       |       |       |       |       |       | essed |       |       |
+|       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       | Radio |       |       |
+|       |       |       |       |       |       |    Ra |       |       |
+|       |       |       |       |       |       | nge** |       |       |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|       |       |       |       |       |       |    ** |       |       |
+|       |       |       |       |       |       | Compr |       |       |
+|       |       |       |       |       |       | essed |       |       |
+|       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       | Altit |       |       |
+|       |       |       |       |       |       | ude** |       |       |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|    1  |    7  |    1  |    4  |    4  |    1  |    2  |    1  |       |
+|       |       |       |       |       |       |       |       |  0-40 |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+
+Bit:
+
+Value:
+
++---------+---------+---------+---------+---------+---------+---------+
+|         |         |         |         |         |         |         |
+| **Mic-E |         |         |         |         |         |         |
+|    Data |         |         |         |         |         |         |
+|    —    |         |         |         |         |         |         |
+|    DEST |         |         |         |         |         |         |
+| INATION |         |         |         |         |         |         |
+|         |         |         |         |         |         |         |
+| ADDRESS |         |         |         |         |         |         |
+|         |         |         |         |         |         |         |
+|   FIELD |         |         |         |         |         |         |
+|    F    |         |         |         |         |         |         |
+| ormat** |         |         |         |         |         |         |
++=========+=========+=========+=========+=========+=========+=========+
+|         |         |         |         |         |         |    *    |
+|   **Lat |   **Lat |   **Lat |   **Lat |   **Lat |   **Lat | *APRS** |
+|         |         |         |         |         |         |         |
+|   Digit |   Digit |   Digit |   Digit |   Digit |   Digit |         |
+|    1**  |    2**  |    3**  |    4**  |    5**  |    6**  |  **Digi |
+|         |         |         |         |         |         |    Path |
+|    **+  |    **+  |    **+  |    **+  |    **+  |    **+  |         |
+|         |         |         |    N/S  |    Lo   |    W/E  |  Code** |
+| Message | Message | Message |    Lat  | ngitude |    Long |         |
+|    Bit  |    Bit  |    Bit  |    Indi |    O    |    Indi |         |
+|    A**  |    B**  |    C**  | cator** | ffset** | cator** |         |
++---------+---------+---------+---------+---------+---------+---------+
+|    1    |    1    |    1    |    1    |    1    |    1    |    1    |
++---------+---------+---------+---------+---------+---------+---------+
+
+..
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
++-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|       |       |       |       |       |       |       |       |       |       |       |       |
+| **Com |       |       |       |       |       |       |       |       |       |       |       |
+| plete |       |       |       |       |       |       |       |       |       |       |       |
+|    We |       |       |       |       |       |       |       |       |       |       |       |
+| ather |       |       |       |       |       |       |       |       |       |       |       |
+|    R  |       |       |       |       |       |       |       |       |       |       |       |
+| eport |       |       |       |       |       |       |       |       |       |       |       |
+|    F  |       |       |       |       |       |       |       |       |       |       |       |
+| ormat |       |       |       |       |       |       |       |       |       |       |       |
+|    —  |       |       |       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |       |       |       |
+|  with |       |       |       |       |       |       |       |       |       |       |       |
+|    O  |       |       |       |       |       |       |       |       |       |       |       |
+| bject |       |       |       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |       |       |       |
+|   and |       |       |       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |       |       |       |
+|   Lat |       |       |       |       |       |       |       |       |       |       |       |
+| /Long |       |       |       |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |       |       |       |
+| posit |       |       |       |       |       |       |       |       |       |       |       |
+| ion** |       |       |       |       |       |       |       |       |       |       |       |
++=======+=======+=======+=======+=======+=======+=======+=======+=======+=======+=======+=======+
+|    *  |       |    *  |    *  |    ** |       |       |       |    *  |       |       |    *  |
+| *\*** |   **O | *\*** | *Time | Lat** | **Sym |   **L |   **S | *Wind |  **We |   **A | *WX** |
+|       | bject |       |       |       |       | ong** | ymbol |       | ather | PRS** |       |
+|       |    N  |       |   DHM |       | Table |       |    C  |   Dir |    D  |       |       |
+|       | ame** |       |    /  |       |       |       | ode** | ectn/ | ata** |    ** |   **U |
+|       |       |       |       |       |  ID** |       |       |    Sp |       | Softw | nit** |
+|       |       |       | HMS** |       |       |       |    *  | eed** |       | are** |       |
+|       |       |       |       |       |       |       | *\_** |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |       |    S  |  uuuu |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|    1  |    9  |    1  |    7  |    8  |    1  |    9  |    1  |    7  |    n  |    1  |       |
+|       |       |       |       |       |       |       |       |       |       |       |   2-4 |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+
+..
+
+   Bytes:
+
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|    *  |       |       |       |       |       |       |       |       |
+| *Tele |       |       |       |       |       |       |       |       |
+| metry |       |       |       |       |       |       |       |       |
+|    R  |       |       |       |       |       |       |       |       |
+| eport |       |       |       |       |       |       |       |       |
+|       |       |       |       |       |       |       |       |       |
+|   For |       |       |       |       |       |       |       |       |
+| mat** |       |       |       |       |       |       |       |       |
++=======+=======+=======+=======+=======+=======+=======+=======+=======+
+|       |       |       |       |       |       |       |       |    *  |
+| **T** | **Seq |   **A |   **A |   **A |   **A |   **A |  **Di | *Comm |
+|       | uence | nalog | nalog | nalog | nalog | nalog | gital | ent** |
+|       |    No |       |       |       |       |       |    Va |       |
+|       |       | Value | Value | Value | Value | Value | lue** |       |
+|       | #**\  |       |       |       |       |       |       |       |
+|       | nnn\  |   1** |   2** |   3** |   4** |   5** |   bbb |       |
+|       | **,** |       |       |       |       |       | bbbbb |       |
+|       |       | aaa\  | aaa\  | aaa\  | aaa\  | aaa\  |       |       |
+|       |       | **,** | **,** | **,** | **,** | **,** |       |       |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+|    1  |    5  |    4  |    4  |    4  |    4  |    4  |    8  |    n  |
++-------+-------+-------+-------+-------+-------+-------+-------+-------+
+
+..
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
++----------+----------+----------+----------+----------+----------+
+|    *     |          |          |          |          |          |
+| *Message |          |          |          |          |          |
+|          |          |          |          |          |          |
+| Format** |          |          |          |          |          |
++==========+==========+==========+==========+==========+==========+
+|    **:** |    **Add |    **:** |    *     |    *     |          |
+|          | ressee** |          | *Message | *Message |          |
+|          |          |          |    Text  |    ID**  |          |
+|          |          |          |    (max  |          |          |
+|          |          |          |    67    |          |          |
+|          |          |          |          |          |          |
+|          |          |          | chars)** |          |          |
++----------+----------+----------+----------+----------+----------+
+|          |          |          |          |    **{** |    *     |
+|          |          |          |          |          | *Message |
+|          |          |          |          |          |    No**  |
+|          |          |          |          |          |          |
+|          |          |          |          |          |    xxxxx |
++----------+----------+----------+----------+----------+----------+
+|    1     |    9     |    1     |    0-67  |    1     |    1-5   |
++----------+----------+----------+----------+----------+----------+
+
++--------------+--------------+----------+------------+--------------+
+|    **Message |              |          |            |              |
+|    Ack       |              |          |            |              |
+| nowledgement |              |          |            |              |
+|    Format**  |              |          |            |              |
++==============+==============+==========+============+==============+
+| **:**        |    *         |    **:** |    **ack** |    **Message |
+|              | *Addressee** |          |            |    No**      |
+|              |              |          |            |    xxxxx     |
++--------------+--------------+----------+------------+--------------+
+| 1            |    9         |    1     |    3       |    1–5       |
++--------------+--------------+----------+------------+--------------+
+
+..
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
+   Bytes:
+
++----------------+----------------+----------------+----------------+
+|                |                |                |                |
+| **User-Defined |                |                |                |
+|    Data        |                |                |                |
+|    Format**    |                |                |                |
++================+================+================+================+
+| **{**          |    **User ID** |                |                |
+|                |    U           | **User-Defined | **User-defined |
+|                |                |    Packet      |    data        |
+|                |                |    Type** X    |    (printable  |
+|                |                |                |    ASCII       |
+|                |                |                |                |
+|                |                |                | recommended)** |
++----------------+----------------+----------------+----------------+
+| 1              |    1           |    1           |    n           |
++----------------+----------------+----------------+----------------+
+
+====================================== ================================
+   **Invalid Data / Test Data Format** 
+====================================== ================================
+**,**                                     **Invalid Data or Test Data**
+1                                         n
+====================================== ================================
+
+APPENDIX 2: THE APRS SYMBOL TABLES
+==================================
+
+   (Each highlighted character in the Alternate Symbol Table may be
+   replaced with an overlay character).
+
+APRS SYMBOL TABLES (continued)
+------------------------------
+
+   (Each highlighted character in the Alternate Symbol Table may be
+   replaced with an overlay character).
+
+.. _aprs-symbol-tables-continued-1:
+
+APRS SYMBOL TABLES (continued)
+------------------------------
+
+   (Each highlighted character in the Alternate Symbol Table may be
+   replaced with an overlay character).
+
+APPENDIX 3: 7-BIT ASCII CODE TABLE
+==================================
+
+   In addition to listing the ASCII character codes in their usual form,
+   this table also expresses the hexadecimal codes for the ASCII digits
+   0–9 and the upper-case letters A–Z in *shifted* form; i.e. shifted
+   one bit left. This is particularly useful for decoding callsigns and
+   Mic-E position information contained in the address fields of AX.25
+   frames.
+
+   **Part 1: Codes 0–31 decimal (00–1f hexadecimal)**
+
+======== ========== =========== ========== ============================
+**Dec**     **Hex**    **Char**            
+======== ========== =========== ========== ============================
+   **0**    00         NUL         CTRL-@  
+   **1**    01         SOH         CTRL-A     Start of Header
+   **2**    02         STX         CTRL-B     Start of Text
+   **3**    03         ETX         CTRL-C     End of Text
+   **4**    04         EOT         CTRL-D     End of Transmission
+   **5**    05         ENQ         CTRL-E     Enquiry (Poll)
+   **6**    06         ACK         CTRL-F     Acknowledge
+   **7**    07         BEL         CTRL-G     Bell
+   **8**    08         BS          CTRL-H     Backspace
+   **9**    09         HT          CTRL-I     Horizontal Tab
+**10**      0a         LF          CTRL-J     Line Feed
+**11**      0b         VT          CTRL-K     Vertical Tab
+**12**      0c         FF          CTRL-L     Form Feed
+**13**      0d         CR          CTRL-M     Carriage Return
+**14**      0e         SO          CTRL-N     Shift Out
+**15**      0f         SI          CTRL-O     Shift In
+**16**      10         DLE         CRTL-P     Data Link Escape
+**17**      11         DC1/XON     CTRL-Q     Device Control 1
+**18**      12         DC2         CTRL-R     Device Control 2
+**19**      13         DC3/XOFF    CTRL-S     Device Control 3
+**20**      14         DC4         CTRL-T     Device Control 4
+**21**      15         NAK         CTRL-U     Negative Acknowledge
+**22**      16         SYN         CTRL-V     Synchronous Idle
+**23**      17         ETB         CTRL-W     End of Transmission Block
+**24**      18         CAN         CTRL-X     Cancel
+**25**      19         EM          CTRL-Y     End of Medium
+**26**      1a         SUB         CTRL-Z     Substitute
+**27**      1b         ESC         CTRL-[     Escape
+**28**      1c         FS          CTRL-\\    File Separator
+**29**      1d         GS          CTRL-]     Group Separator
+**30**      1e         RS          CTRL-^     Record Separator
+**31**      1f         US          CTRL-\_    Unit Separator
+======== ========== =========== ========== ============================
+
+..
+
+   **Part 2: Codes 32–127 decimal (20–7f hexadecimal), including hex
+   codes for shifted 0–9/A–Z**
+
+APPENDIX 4: DECIMAL-TO-HEX CONVERSION TABLE
+===========================================
+
+   **APPENDIX 5: GLOSSARY**
+
+   **Altitude** 1. In Mic-E format, the altitude in meters relative to
+   10km below mean sea level.
+
+   2. In Comment text, the altitude in feet above mean sea level.
+
+   **Announcement** An APRS message that is repeated a few times an
+   hour, perhaps for several days.
+
+**Announcement Identifier** A single letter A-Z that identifies a
+particular announcement.
+
+   **Antenna Height** In NMEA sentences, the height of the antenna in
+   meters relative to mean sea level. (The antenna height in GPS NMEA
+   sentences fluctuates wildly because of Selective Availability, and
+   should only be used if DGPS correction is applied).
+
+   **APRS** Automatic Position Reporting System.
+
+   **APRS Data** The data that follows the APRS Data Type Identifier in
+   the AX.25 Information field and precedes the APRS Data Extension.
+
+   **APRS Data Extension** A 7-byte extension to APRS Data. The Data
+   Extension includes one of Course/Speed, Wind Direction/Wind Speed,
+   Station Power/Antenna Effective Height/Gain/Directivity,
+   Pre-Calculated Radio Range, DF Signal Strength/Effective Antenna
+   Height/Gain, Area Object Descriptor.
+
+   **APRS Digipeater Path** A digipeater path via repeaters with RELAY,
+   WIDE and related aliases. Used in Mic-E compressed location format.
+
+   **APRS Data Type Identifier** The single-byte identifier that
+   specifies what kind of APRS information is contained in the AX.25
+   Information field.
+
+   **Area Object** A user-defined graphic object (circle, ellipse,
+   triangle, box and line).
+
+   **ASCII** American Standard Code for Information Interchange. A 7-bit
+   character code conforming to ANSI X3.4 (1968) — see Appendix 3 for
+   character definitions.
+
+   **AX.25** Amateur Packet-Radio Link-Layer Protocol.
+
+   **Base 91** Number base used to ensure that numeric values are
+   transmitted as printable ASCII characters. To obtain the character
+   string corresponding to a numeric value, divide the value
+   progressively by decreasing powers of 91, and add 33 decimal to the
+   result at each step. Printable characters are in the range
+   **!**..\ **{**. Used in compressed lat/long and altitude computation.
+
+   **Bulletin** An APRS message that is repeated several times an hour,
+   for a small number of hours. A General Bulletin is addressed to
+   no-one in particular. A Group Bulletin is addressed to a named group
+   (e.g. WX).
+
+**Bulletin Identifier** A single digit 0-9 that identifies a particular
+bulletin.
+
+   **Destination Address field** The AX.25 Destination Address field,
+   which can contain an APRS destination callsign or Mic-E encoded data.
+
+   **DF Report** A report containing DF bearing and range.
+
+   **DGPS** Differential GPS. Used to overcome the errors arising from
+   Selective Availability.
+
+   **DHM** 7-character timestamp: day-of-the-month, hour, minute, zulu
+   or local time.
+
+   **DHMz** 7-character timestamp: day-of-the-month, hour, minute, zulu
+   only.
+
+   **Digipeater** A station that relays AX.25 packets. A chain of up to
+   8 digipeaters may be specified.
+
+**Digipeater Addresses field** The AX.25 field containing 0–8 digipeater
+callsigns (or aliases).
+
+   **Directivity** The favored direction of an antenna. Used in the PHG
+   Data Extension.
+
+   **DX Cluster** A network host that collects and disseminates user
+   reports of DX activity.
+
+   **ECHO** A generic APRS digipeater callsign alias, for an HF
+   digipeater.
+
+   **Effective Antenna Height** The height of an antenna above the local
+   terrain (not above sea level). A first-order indicator of the
+   antenna’s effectiveness in the local area. Used in the PHG Data
+
+Extension.
+
+   **ERP** Effective Radiated Power. Used in Status Reports containing
+   Beam Heading and Power data (typically for meteor scatter use).
+
+   **FCS** Frame Check Sequence. A sequence of 16 bits that follows the
+   AX.25 Information field, used to verify the integrity of the packet.
+
+   **GATE** A gateway between HF and VHF APRS networks. Used primarily
+   to relay long- distance HF APRS traffic onto local VHF networks.
+
+   **GGA Sentence** A standard NMEA sentence, containing the receiving
+   station’s lat/long position and antenna height relative to mean sea
+   level, and other data.
+
+   **GLL Sentence** A standard NMEA sentence, containing the receiving
+   station’s lat/long position and other data.
+
+   **GMT** Greenwich Mean Time (=UTC=zulu).
+
+   **GPS** Global Positioning System. A global network of 24 satellites
+   that provide lat/long and antenna height of a receiving station.
+
+   **GPSxyz** An APRS destination callsign that specifies a display
+   symbol from either the Primary Symbol Table or the Alternate Symbol
+   Table. Some symbols from the Alternate Symbol Table can be overlaid
+   with a digit or a letter. Used by trackers that cannot specify the
+   symbol in the AX.25 Information field.
+
+   **GPSCnn** An APRS destination callsign that specifies a display
+   symbol from the Primary Symbol Table. The symbol can not be overlaid.
+   Used by trackers that cannot specify the symbol in the AX.25
+   Information field.
+
+   **GPSEnn** An APRS destination callsign that specifies a display
+   symbol from the Alternate Symbol Table. The symbol can not be
+   overlaid. Used by trackers that cannot specify the symbol in the
+   AX.25 Information field.
+
+   **HMS** 1. In NMEA sentences, a 6-character timestamp: hour, minute,
+   second UTC.
+
+   2. In APRS Data, a 7-character timestamp: hour, minute, second, zulu
+   or local.
+
+   **ICQ** International CQ chat.
+
+   **IGate** A gateway between a VHF and/or HF APRS network and the
+   Internet.
+
+   **Information field** The AX.25 Information field containing APRS
+   information.
+
+   **Item** A type of display object.
+
+   **Item Report** A report containing the location of an APRS Item.
+
+   **Killed Object** An Object that an APRS user has assumed control of.
+
+   **knots** International nautical miles per hour.
+
+   **KPC-3** A Terminal Node Controller from Kantronics Co Inc.
+
+   **Longitude Offset** An offset of +100 degrees longitude (used in
+   Mic-E longitude computation).
+
+   **LORAN** Long Range Navigation System (a terrestrial precursor to
+   GPS).
+
+**Maidenhead Locator** A 4- or 6-character grid locator specifying a
+station’s position.
+
+   **MDHM** 8-byte timestamp: month, day, hour, minute (used in
+   positionless weather station reports).
+
+   **Message** A one-line text message addressed to a particular
+   station.
+
+**Message Acknowledgement** An optional acknowledgement of receipt of a
+message.
+
+**Message Group** A user-defined group to receive messages.
+
+**Message Identifier** A 1–5 character message identifier (typically a
+line number).
+
+   **Mic-E** Originally Microphone Encoder, a unit that encodes
+   location, course and speed information into a very short packet, for
+   transmission when releasing the microphone PTT button. The Mic-E
+   encoding algorithm is now used in other devices (e.g. in the
+
+   PIC-E and the Kenwood TH-D7/TM-D700 radios).
+
+   **Mic-E Message Identifier** A 3-bit identifier (A/B/C) specifying a
+   standard Mic-E message or custom message code.
+
+   **Mic-E Message Code** A 3-bit code specifying a Standard or Custom
+   Mic-E message.
+
+   **MIM** Micro Interface Module. A complete telemetry TNC transmitter
+   on a chip.
+
+   **mph** miles per hour.
+
+   **Net Cycle Time** The time within which it should be possible to
+   gain the complete picture of APRS activity (typically 10, 20 or 30
+   minutes, depending on the number of digipeaters traversed and local
+   conditions). Stations should not transmit status or position
+   information more frequently unless mobile, or in response to a Query.
+
+   **NMEA** National Marine Electronic Association (United States).
+   Producer of the *NMEA 0183 Version 2.0* specification that governs
+   the format of Received Sentences from navigation equipment (such as
+   GPS and LORAN receivers). See Appendix 6 for a reference to NMEA
+   sentence formats.
+
+   **NMEA (Received) Sentence** The ASCII data stream received from
+   navigation equipment (such as GPS receivers)
+
+   conforming to the NMEA 0182 Version 2.0 specification. APRS supports
+   five NMEA Sentences: GGA, GLL, RMC, VTG and WPT.
+
+   **NRQ** Number/Rate/Quality. A measure of confidence in DF Bearing
+   reports.
+
+   **Null Position** Default position to be reported if the actual
+   position is unknown or indeterminate. The null position is 0° 0' 0"
+   north, 0° 0' 0" west.
+
+   **NWS** National Weather Service (United States).
+
+   **Object** A display object that is (usually) not a station. For
+   example, a weather front or a marathon runner.
+
+   **Object Report** A report containing the position of an object, with
+   optional timestamp and APRS Data Extension.
+
+   **PHG** APRS Data Extension specifying Power, Effective Antenna
+   Height/Gain/Directivity.
+
+   **PIC** Programmable Interface Controller.
+
+   **PIC-E** A PIC implementation of the Mic-E microphone encoder.
+
+   **Position Ambiguity** A reduction in the accuracy of APRS position
+   information (implemented by replacing low-order lat/long digits with
+   spaces). Used when the exact position is not known.
+
+**Position Report** A report containing lat/long position, optionally
+with timestamp and Data Extension.
+
+**Pre-Calculated Radio Range** A station’s estimate of omni-directional
+radio range (in miles). Used in compressed
+
+   lat/long format.
+
+   **Query** A request for information. Queries may be addressed to
+   stations in general or to specific stations.
+
+**Range Circle** Usable radio range (in miles), computed from PHG data.
+
+   **RELAY** A generic APRS digipeater callsign alias, for a VHF/UHF
+   digipeater with limited local coverage.
+
+   **Response** A reply to a query.
+
+   **RMC Sentence** A standard NMEA sentence, containing the receiving
+   station’s lat/long position, course and speed, and other data.
+
+   **RTCM** Radio Technical Commission for Maritime Services. The RTCM
+   SC104 data format specification describes the requirements for
+   differential GPS data correction.
+
+   **Selective Availability** Deliberate GPS position dithering,
+   introducing significant received position errors in latitude,
+   longitude *and* antenna height. Errors can be greatly reduced with
+   differential GPS.
+
+   **Sentence** See NMEA (Received) Sentence.
+
+   **Signpost** A special signpost icon that displays user-defined
+   variable information (such as a
+
+   speed limit or mileage) as an overlay.
+
+   **Skywarn** A weather spotter initiative coordinated by the United
+   States National Weather Service.
+
+   **Source Address Field** The AX.25 Source Address field, containing
+   the callsign of the originating station. A non-zero SSID specifies a
+   display symbol.
+
+   **Source Path Header** The digipeater path followed prior to a packet
+   entering a Third-Party Network.
+
+   **SPCL** A generic APRS destination callsign used for special
+   stations.
+
+   **SSID** Secondary Station Identifier. A number in the range 0-15, as
+   an adjunct to an AX.25 address. If the SSID in a source address is
+   non-zero, it specifies a display symbol. (This is used when the
+   station is unable to specify the symbol in the AX.25 Destination
+   Address field or Information field).
+
+   **Station Capabilities** A list of station characteristics that is
+   sent in reply to a query.
+
+   **Status Report** A report containing station status information (and
+   optionally a Maidenhead locator).
+
+**Switch Stream Character** A character normally used for switching TNC
+channels.
+
+   **Symbol** A display icon. Consists of a Symbol Table
+   Identifier/Symbol Code pair. Generically,
+
+   **/$** represents a symbol from the Primary Symbol Table, and **\\$**
+   represents a symbol from the Alternate Symbol Table.
+
+**Symbol Code** A code for a symbol within a Symbol Table.
+
+   **Symbol Table Identifier** An ASCII code specifying the Primary
+   Symbol Table (**/**) or Alternate Symbol Table (**\\**).
+
+   The Symbol Table Identifier is also implicit in GPSCnn and GPSEnn
+   destination callsigns.
+
+   **Target Footprint** A target area for queries. The querying station
+   asks for responses from stations within a specified number of miles
+   of a lat/long position.
+
+   **TH-D7** A combined VHF/UHF handheld radio and APRS-compatible TNC
+   from Kenwood.
+
+   **TM-D700** A combined VHF/UHF mobile radio and APRS-compatible TNC
+   from Kenwood.
+
+   **Third Party Network** A non-APRS network that does not understand
+   AX.25 addresses (e.g. the Internet).
+
+   **Third-Party Header** A Path Header with the Third-Party Network
+   Identifier and the callsign of the receiving gateway inserted.
+
+   **TNC** Terminal Node Controller. A combined AX.25 packet
+   assembler/disassembler and modem.
+
+   **Trace** An APRS query that asks for the route taken by a packet to
+   a specified station.
+
+   **TRACE** A generic digipeater callsign alias, for digipeaters that
+   performs callsign substitution. These digipeaters self-identify
+   packets they digipeat, by inserting their own callsign in place of
+   RELAY,WIDE or TRACE.
+
+   **Tracker** A unit comprising a GPS receiver (to obtain the current
+   geographical position) and a radio transmitter (to transmit the
+   position to other stations).
+
+   **Tunneling** Passing APRS AX.25 traffic through a third-party
+   network that does not understand AX.25 addressing. The AX.25
+   addresses are carried as data (in the Source Path Header) through the
+   tunneled network.
+
+   **UI-Frame** AX.25 Unnumbered Information frame. APRS uses only
+   UI-frames — that is, it operates entirely in connectionless (UNPROTO)
+   mode.
+
+**UNPROTO Path** The digipeater path to the destination callsign.
+
+   **UTC** Coordinated Universal Time (=zulu=GMT).
+
+   **VTG Received Sentence** A standard NMEA sentence, containing the
+   receiving station’s course and speed.
+
+   **WIDE** A generic APRS digipeater callsign alias, for a digipeater
+   with wide area coverage.
+
+   **WIDEn-N** A generic APRS digipeater callsign alias, for a
+   digipeater with wide area coverage (N=0-7). As a packet passes
+   through a digipeater, the value of N is decremented by 1 until it
+   reaches zero. The digipeater keeps a record of each packet (or its
+   FCS) as it
+
+   passes through, and will not digipeat the packet again if it has
+   digipeated it already within the last 28 seconds.
+
+**WPT Sentence** A standard NMEA sentence, containing waypoints.
+
+   **WX** Weather.
+
+   **Ziplan** A cheap twisted-pair LAN connecting PCs via their serial
+   I/O ports. Designed for use in emergency situations.
+
+   **Zulu** UTC/GMT.
+
+Units Conversion Table
+~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+----------------+----------------+----------------+
+|    **To        |    **to**      |    **multiply  |    **divide    |
+|    convert     |                |    by**        |    by**        |
+|    from**      |                |                |                |
++================+================+================+================+
+| feet           |    meters      |    0.3048      |                |
++----------------+----------------+----------------+----------------+
+| meters         |    feet        |                |    0.3048      |
++----------------+----------------+----------------+----------------+
+| miles          |    km          |    1.609344    |                |
++----------------+----------------+----------------+----------------+
+| km             |    miles       |                |    1.609344    |
++----------------+----------------+----------------+----------------+
+| miles          |    nautical    |    0.8689762   |                |
+|                |    miles       |                |                |
++----------------+----------------+----------------+----------------+
+| nautical miles |    miles       |                |    0.8689762   |
++----------------+----------------+----------------+----------------+
+| miles per hour |    knots       |    0.8689762   |                |
+| (mph)          |                |                |                |
++----------------+----------------+----------------+----------------+
+| knots          |    miles per   |                |    0.8689762   |
+|                |    hour (mph)  |                |                |
++----------------+----------------+----------------+----------------+
+| knots          |    meters /    |    0.51444’    |                |
+|                |    second      |                |                |
++----------------+----------------+----------------+----------------+
+| meters /       |    knots       |                |    0.51444’    |
+| second         |                |                |                |
++----------------+----------------+----------------+----------------+
+| miles per hour |    meters /    |    0.44704     |                |
+| (mph)          |    second      |                |                |
++----------------+----------------+----------------+----------------+
+| meters /       |    miles per   |                |    0.44704     |
+| second         |    hour (mph)  |                |                |
++----------------+----------------+----------------+----------------+
+
+..
+
+   **Fahrenheit / Celsius Temperature Conversion Equations**
+
+F = ( C x 1.8 ) + 32 C = ( F – 32 ) x 5
+'''''''''''''''''''''''''''''''''''''''
+
+9
+
+APPENDIX 6: REFERENCES
+======================
+
+   *AX.25 Amateur Packet-Radio Link-Layer Protocol Version 2.0, October
+   1984,* at
+
+   http://www.tapr.org/tapr/html/ax25.html
+
+   *NMEA 0183 ASCII Interface Specification,* at
+   http://www.nmea.org/0183.htm
+
+   NMEA Sentence Formats, in the *Garmin GPS25 Technical Reference
+   Manual*, at
+
+   http://www.garmin.com/manuals/spec25.pdf
+
+   Maidenhead Locator, in the *IARU Region 1 VHF Manager’s Manual*, at
+
+   http://www.scit.wlv.ac.uk/vhfc/iaru.r1.vhfm.4e/index.html
+
+APPENDIX 7: DOCUMENT RELEASE HISTORY
+====================================
+
++-------------+--------------------+---------------------------------+
+|    **Date** |    **Doc Version** |    **Status / Major Changes**   |
++=============+====================+=================================+
+| 10 Oct 1999 |    1.0 (Draft)     |    Protocol Version 1.0. First  |
+|             |                    |    public draft release.        |
++-------------+--------------------+---------------------------------+
+| 3 Dec 1999  |    1.0.1g          |    Protocol Version 1.0. Second |
+|             |                    |    public draft release. Much   |
+|             |                    |    extended, incorporating      |
+|             |                    |    packet format layouts, APRS  |
+|             |                    |    symbol tables, compressed    |
+|             |                    |    data format, Mic-E format,   |
+|             |                    |    telemetry format.            |
++-------------+--------------------+---------------------------------+
+| 30 Apr 2000 |    1.0.1m          |    Protocol Version 1.0. Third  |
+|             |                    |    public draft release.        |
+|             |                    |                                 |
+|             |                    |    Major additions/changes to   |
+|             |                    |    the draft 1.0.1g             |
+|             |                    |    specification:               |
+|             |                    |                                 |
+|             |                    | -  Added a section on Map Views |
+|             |                    |       and Range Scale.          |
+|             |                    |                                 |
+|             |                    | -  Changed Destination Address  |
+|             |                    |       SSID description          |
+|             |                    |       (specifying generic APRS  |
+|             |                    |       digipeater paths) to      |
+|             |                    |       apply to *all* packets,   |
+|             |                    |       not just Mic-E packets.   |
+|             |                    |                                 |
+|             |                    | -  Changed APRS destination     |
+|             |                    |       “callsigns” to            |
+|             |                    |       “destination addresses”.  |
+|             |                    |                                 |
+|             |                    | -  Added TEL\* to the list of   |
+|             |                    |       generic destination       |
+|             |                    |       addresses.                |
+|             |                    |                                 |
+|             |                    | -  Added brief explanations of  |
+|             |                    |       how several generic       |
+|             |                    |       destination addresses are |
+|             |                    |       used.                     |
+|             |                    |                                 |
+|             |                    | -  Added “Grid-in-To-Address”   |
+|             |                    |       (but marked as obsolete). |
+|             |                    |                                 |
+|             |                    | -  Extended the description of  |
+|             |                    |       the Comment field, with   |
+|             |                    |       pointers to what can      |
+|             |                    |       appear in the field.      |
+|             |                    |                                 |
+|             |                    | -  Added explanation of base    |
+|             |                    |       91.                       |
+|             |                    |                                 |
+|             |                    | -  Added paragraph on lack of   |
+|             |                    |       consistency in on-air     |
+|             |                    |       units, and default GPS    |
+|             |                    |       datum = WGS84.            |
+|             |                    |                                 |
+|             |                    | -  APRS Data Type Identifiers   |
+|             |                    |       Table:                    |
+|             |                    |                                 |
+|             |                    | ..                              |
+|             |                    |                                 |
+|             |                    |    marked Shelter Data and      |
+|             |                    |    Space Weather as reserved    |
+|             |                    |    DTIs.                        |
+|             |                    |                                 |
+|             |                    |    marked the **-** DTI as      |
+|             |                    |    unused (previously           |
+|             |                    |    erroneously allocated to     |
+|             |                    |    Killed Objects). marked the  |
+|             |                    |    **'** DTI to mean *Current*  |
+|             |                    |    Mic-E data in Kenwood        |
+|             |                    |    TM-D700 radios. marked the   |
+|             |                    |    **‘** DTI as *not used* in   |
+|             |                    |    Kenwood TM-D700 radios.      |
+|             |                    |                                 |
+|             |                    | -  Position Ambiguity: need     |
+|             |                    |       only be specified in the  |
+|             |                    |       latitude — the longitude  |
+|             |                    |       will have the same level  |
+|             |                    |       of ambiguity.             |
+|             |                    |                                 |
+|             |                    | -  Added the options of         |
+|             |                    |       **.../...** and           |
+|             |                    |       **␣␣␣/␣␣␣** to express    |
+|             |                    |       unknown course/speed.     |
+|             |                    |                                 |
+|             |                    | -  Added DFS parameter table.   |
+|             |                    |                                 |
+|             |                    | -  Added Quality table for      |
+|             |                    |       BRG/NRQ data.             |
+|             |                    |                                 |
+|             |                    | -  Position, DF and Compressed  |
+|             |                    |       Report formats: split the |
+|             |                    |       format diagrams into two  |
+|             |                    |       parts (with and without   |
+|             |                    |       timestamps).              |
+|             |                    |                                 |
+|             |                    | -  DF Reports: added notes:     |
+|             |                    |                                 |
+|             |                    | ..                              |
+|             |                    |                                 |
+|             |                    |    BRG/NRQ data is only valid   |
+|             |                    |    when the symbol is **/\\**.  |
+|             |                    |                                 |
+|             |                    |    CSE=000 means the DF station |
+|             |                    |    is fixed, CSE non-zero means |
+|             |                    |    the station is moving.       |
+|             |                    |                                 |
+|             |                    | -  Compressed position reports: |
+|             |                    |       corrected the             |
+|             |                    |       multiplication/division   |
+|             |                    |       constants for encoding/   |
+|             |                    |       decoding.                 |
+|             |                    |                                 |
+|             |                    | -  Mic-E chapter rewritten and  |
+|             |                    |       expanded. Emphasized the  |
+|             |                    |       need to ensure that       |
+|             |                    |       non-printing ASCII        |
+|             |                    |       characters are not        |
+|             |                    |       dropped. Corrected the    |
+|             |                    |       Mic-E telemetry data      |
+|             |                    |       format.                   |
+|             |                    |                                 |
+|             |                    | -  Expanded the introductory    |
+|             |                    |       description of            |
+|             |                    |       Objects/Items. All        |
+|             |                    |       Objects must have a       |
+|             |                    |       timestamp.                |
+|             |                    |                                 |
+|             |                    | -  Added Area Object Extended   |
+|             |                    |       Data field to Object and  |
+|             |                    |       Item format diagrams.     |
+|             |                    |                                 |
+|             |                    | -  Added Object/Item format     |
+|             |                    |       diagrams with compressed  |
+|             |                    |       location data.            |
+|             |                    |                                 |
+|             |                    | -  Killed Objects/Items: now    |
+|             |                    |       indicated by underscore   |
+|             |                    |       after the name.           |
+|             |                    |                                 |
+|             |                    | ..                              |
+|             |                    |                                 |
+|             |                    |    (continued on the next page) |
++-------------+--------------------+---------------------------------+
+
++-------------+--------------------+---------------------------------+
+|    **Date** |    **Doc Version** |    **Status / Major Changes**   |
++=============+====================+=================================+
+|             |    1.0.1m          | -  Re-categorized weather       |
+|             |                    |       reports: Raw,             |
+|             |    (continued)     |       Positionless and          |
+|             |                    |       Complete.                 |
+|             |                    |                                 |
+|             |                    | -  Added a statement that       |
+|             |                    |       temperatures below zero   |
+|             |                    |       are expressed as -01 to   |
+|             |                    |       -99.                      |
+|             |                    |                                 |
+|             |                    | -  Added the options of **...** |
+|             |                    |       and **␣␣␣** to express    |
+|             |                    |       unknown weather parameter |
+|             |                    |       values.                   |
+|             |                    |                                 |
+|             |                    | -  Corrected the storm data     |
+|             |                    |       format. Also, central     |
+|             |                    |       pressure is now /ppppp    |
+|             |                    |       (tenths of millibar).     |
+|             |                    |                                 |
+|             |                    | -  Corrected the telemetry      |
+|             |                    |       parameter data (now APRS  |
+|             |                    |       *messages* instead of     |
+|             |                    |       AX.25 UI *beacons*).      |
+|             |                    |                                 |
+|             |                    | -  Added optional comment field |
+|             |                    |       to the Telemetry (T)      |
+|             |                    |       format.                   |
+|             |                    |                                 |
+|             |                    | -  Added a section describing   |
+|             |                    |       the handling of multiple  |
+|             |                    |       message acknowledgements. |
+|             |                    |                                 |
+|             |                    | -  Added a section on NTS       |
+|             |                    |       radiograms.               |
+|             |                    |                                 |
+|             |                    | -  Added Bulletin/Announcement  |
+|             |                    |       implementation            |
+|             |                    |       recommendations.          |
+|             |                    |                                 |
+|             |                    | -  Queries and Responses:       |
+|             |                    |                                 |
+|             |                    | ..                              |
+|             |                    |                                 |
+|             |                    |    Query Names (e.g. APRSD):    |
+|             |                    |    all upper-case.              |
+|             |                    |                                 |
+|             |                    |    A queried station need not   |
+|             |                    |    respond if it has no         |
+|             |                    |    relevant information to      |
+|             |                    |    send. A queried station      |
+|             |                    |    should ignore any query type |
+|             |                    |    that it does not recognize.  |
+|             |                    |    APRSH: callsigns must be     |
+|             |                    |    padded to 9 characters.      |
+|             |                    |                                 |
+|             |                    | -  Added PING as a synonym of   |
+|             |                    |       APRST.                    |
+|             |                    |                                 |
+|             |                    | -  Extended meteor scatter ERP  |
+|             |                    |       beyond 810 watts, and     |
+|             |                    |       added a lookup table.     |
+|             |                    |                                 |
+|             |                    | -  Maidenhead Locator: all      |
+|             |                    |       letters must be           |
+|             |                    |       transmitted in upper      |
+|             |                    |       case, but may be received |
+|             |                    |       in either upper or lower  |
+|             |                    |       case.                     |
+|             |                    |                                 |
+|             |                    | -  Changed the definition of    |
+|             |                    |       non-APRS packets — these  |
+|             |                    |       are not APRS Status       |
+|             |                    |       Messages, but may         |
+|             |                    |       optionally be treated as  |
+|             |                    |       such.                     |
+|             |                    |                                 |
+|             |                    | -  APRS Symbols chapter         |
+|             |                    |       substantially rewritten.. |
+|             |                    |                                 |
+|             |                    | -  Added section on Symbol      |
+|             |                    |       Precedence (where more    |
+|             |                    |       than one symbol appears   |
+|             |                    |       in an APRS packet).       |
+|             |                    |                                 |
+|             |                    | -  Clarified some of the        |
+|             |                    |       descriptions in the APRS  |
+|             |                    |       Symbol Tables.            |
+|             |                    |                                 |
+|             |                    | -  Added overlay capability to  |
+|             |                    |       the \\a symbol            |
+|             |                    |       (ARES/RACES etc).         |
+|             |                    |                                 |
+|             |                    | -  Separated the 7-bit ASCII    |
+|             |                    |       table from the Dec/Hex    |
+|             |                    |       (0x80-0xff) conversion    |
+|             |                    |       table.                    |
+|             |                    |                                 |
+|             |                    | -  Added several new entries    |
+|             |                    |       and a units conversion    |
+|             |                    |       table to the Glossary.    |
+|             |                    |                                 |
+|             |                    | -  Added new references to NMEA |
+|             |                    |       sentence formats and      |
+|             |                    |       Maidenhead Locator        |
+|             |                    |       formats.                  |
++-------------+--------------------+---------------------------------+
+
++----------------+--------------------+------------------------------+
+|    **Date**    |    **Doc Version** |    **Status / Major          |
+|                |                    |    Changes**                 |
++================+====================+==============================+
+|    29 Aug 2000 |    1.0.1           |    Protocol Version 1.0.     |
+|                |                    |    Approved public release.  |
+|                |                    |                              |
+|                |                    |    Minor additions/changes   |
+|                |                    |    to the draft 1.0.1m       |
+|                |                    |    specification:            |
+|                |                    |                              |
+|                |                    | -  Added Foreword.           |
+|                |                    |                              |
+|                |                    | -  Replaced section on Map   |
+|                |                    |       Views and Range Scale. |
+|                |                    |                              |
+|                |                    | -  APRS Software Version No: |
+|                |                    |       added **APD**\ xxx     |
+|                |                    |       (Linux aprsd server).  |
+|                |                    |                              |
+|                |                    | -  APRS Data Type            |
+|                |                    |       Identifier: Designated |
+|                |                    |       **[** as Maidenhead    |
+|                |                    |       grid locator (but      |
+|                |                    |       noted as obsolete).    |
+|                |                    |                              |
+|                |                    | -  Position Ambiguity: added |
+|                |                    |       a bounding box         |
+|                |                    |       example.               |
+|                |                    |                              |
+|                |                    | -  Compressed Position       |
+|                |                    |       Formats: for           |
+|                |                    |       course/speed,          |
+|                |                    |       corrected the range of |
+|                |                    |       possible values of the |
+|                |                    |       “c” byte to 0–89.      |
+|                |                    |                              |
+|                |                    | -  Mic-E: replaced the       |
+|                |                    |       latitude example       |
+|                |                    |       table, to show more    |
+|                |                    |       explicitly how the     |
+|                |                    |       N/S/E/W/Long offset    |
+|                |                    |       bits are encoded.      |
+|                |                    |                              |
+|                |                    | -  Mic-E: removed the        |
+|                |                    |       paragraph stating that |
+|                |                    |       there must be a space  |
+|                |                    |       between the altitude   |
+|                |                    |       and comment text — no  |
+|                |                    |       space is required.     |
+|                |                    |                              |
+|                |                    | -  Mic-E: removed the note   |
+|                |                    |       on inaccurate altitude |
+|                |                    |       data, as GPS Selective |
+|                |                    |       Availability has been  |
+|                |                    |       switched off.          |
+|                |                    |                              |
+|                |                    | -  Object Reports: added     |
+|                |                    |       timestamps to some of  |
+|                |                    |       the examples (an       |
+|                |                    |       Object Report must     |
+|                |                    |       always have a          |
+|                |                    |       timestamp).            |
+|                |                    |                              |
+|                |                    | -  Signposts: can be Objects |
+|                |                    |       or Items.              |
+|                |                    |                              |
+|                |                    | -  Storm Data: changed       |
+|                |                    |       central pressure       |
+|                |                    |       format to **/**\ pppp  |
+|                |                    |       (i.e. to the nearest   |
+|                |                    |       millibar/hPascal).     |
+|                |                    |                              |
+|                |                    | -  Storm Data: Hurricane     |
+|                |                    |       Brenda examples:       |
+|                |                    |       inserted a leading     |
+|                |                    |       zero in the central    |
+|                |                    |       pressure field         |
+|                |                    |       (central pressure is 4 |
+|                |                    |       digits).               |
+|                |                    |                              |
+|                |                    | -  Telemetry Data: Added     |
+|                |                    |       **MIC** as an          |
+|                |                    |       alternative form of    |
+|                |                    |       Sequence Number.       |
+|                |                    |       **MIC** may or may not |
+|                |                    |       be followed by a       |
+|                |                    |       comma.                 |
+|                |                    |                              |
+|                |                    | -  Messages: added the       |
+|                |                    |       reject message format. |
+|                |                    |                              |
+|                |                    | -  Appendix 1: Agrelo        |
+|                |                    |       format: changed the    |
+|                |                    |       separator between      |
+|                |                    |       Bearing and Quality to |
+|                |                    |       **/**.                 |
+|                |                    |                              |
+|                |                    | -  Symbol Table: changed     |
+|                |                    |       **/(** symbol from     |
+|                |                    |       “Cloudy” to “Mobile    |
+|                |                    |       Satellite              |
+|                |                    |       Groundstation”.        |
+|                |                    |                              |
+|                |                    | -  Reformatted the Units     |
+|                |                    |       Conversion Table.      |
++----------------+--------------------+------------------------------+
+
+..
+
+   END OF DOCUMENT
