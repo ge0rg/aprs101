@@ -2576,7 +2576,6 @@ Value:
    Indicator can be used instead, so that the latest fix time may be
    included.
 
-.. |image0| image:: media/image1.png
    **Old Trackers** Some digipeaters have the ability to convert raw
    NMEA strings from existing trackers to compressed data format for
    further forwarding.
@@ -6518,3 +6517,5 @@ APPENDIX 7: DOCUMENT RELEASE HISTORY
 ..
 
    END OF DOCUMENT
+
+.. |image0| image:: media/image1.png
